@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stablecoin Map · Base · Global Coverage</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+
+<style>
+  :root {
+    /* New palette */
+    --blue:        #0000ff;
+    --blue-soft:   #3c8aff;
+    --blue-glow:   rgba(60, 138, 255, 0.45);
+    --blue-tint:   rgba(0, 0, 255, 0.08);
+    --white:       #ffffff;
+    --off:         #eef0f3;
+
+    --ink:         #06061f;
+    --ink-dim:     #4a5266;
+    --ink-faint:   #8b91a2;
+    --line:        #d8dde5;
+    --line-soft:   #e4e7ed;
+    --inactive:    #d8dde5;
+    --inactive-stroke: #c4cad4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--off);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+    cursor: default;
+    min-height: 100vh;
+  }
+  ::selection { background: var(--blue); color: var(--white); }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--off); }
+  ::-webkit-scrollbar-thumb { background: var(--blue-soft); border-radius: 3px; }
+
+  /* NAV */
+  nav.topbar {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 40px;
+    background: rgba(238, 240, 243, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-size: 13px;
+  }
+  .brand {
+    color: var(--blue);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 4px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .brand .dot {
+    width: 8px; height: 8px; background: var(--blue);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--blue-glow);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+  }
+  .meta-pill {
+    color: var(--ink-dim);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+  }
+  .meta-pill span { color: var(--blue); }
+
+  /* HERO */
+  header.hero {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 80px 40px 32px;
+  }
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 18px;
+  }
+  h1.hero-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(44px, 6.5vw, 84px);
+    font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: -1px;
+    text-transform: uppercase;
+    margin-bottom: 22px;
+  }
+  h1.hero-title em {
+    font-style: italic;
+    font-weight: 500;
+    color: var(--blue);
+    background: linear-gradient(90deg, var(--blue), var(--blue-soft));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .lede {
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--ink-dim);
+    max-width: 660px;
+    font-weight: 300;
+  }
+  .lede strong { color: var(--ink); font-weight: 500; }
+
+  /* STATS */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    margin: 48px auto 0;
+    max-width: 1300px;
+    background: var(--white);
+  }
+  .stat {
+    padding: 24px 28px;
+    border-right: 1px solid var(--line);
+  }
+  .stat:last-child { border-right: none; }
+  .stat-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    margin-bottom: 10px;
+  }
+  .stat-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 34px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .stat-value .unit {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--blue);
+    margin-left: 8px;
+    letter-spacing: 2px;
+    font-weight: 400;
+  }
+
+  /* MAP */
+  .map-section {
+    padding: 56px 40px 24px;
+    max-width: 1300px;
+    margin: 0 auto;
+  }
+  .map-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .map-meta h2 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .legend {
+    display: flex; gap: 24px; align-items: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+  .legend-item { display: flex; align-items: center; gap: 8px; }
+  .legend-swatch {
+    width: 12px; height: 12px;
+    border: 1px solid var(--line);
+  }
+  .swatch-active   { background: var(--blue); border-color: var(--blue); }
+  .swatch-inactive { background: var(--inactive); }
+
+  .map-container {
+    position: relative;
+    border: 1px solid var(--line);
+    background: var(--white);
+    aspect-ratio: 2 / 1;
+    overflow: hidden;
+  }
+  .map-container::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 30% 40%, rgba(60, 138, 255, 0.05), transparent 55%),
+      radial-gradient(circle at 70% 65%, rgba(0, 0, 255, 0.04), transparent 55%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .map-corner {
+    position: absolute;
+    width: 14px; height: 14px;
+    border: 1px solid var(--blue);
+    pointer-events: none;
+    z-index: 3;
+  }
+  .map-corner.tl { top: 10px; left: 10px; border-right: none; border-bottom: none; }
+  .map-corner.tr { top: 10px; right: 10px; border-left: none; border-bottom: none; }
+  .map-corner.bl { bottom: 10px; left: 10px; border-right: none; border-top: none; }
+  .map-corner.br { bottom: 10px; right: 10px; border-left: none; border-top: none; }
+
+  svg.map-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    position: relative;
+    z-index: 1;
+  }
+
+  .country-base {
+    fill: var(--inactive);
+    stroke: var(--inactive-stroke);
+    stroke-width: 0.4;
+    pointer-events: none;
+  }
+  .country-active {
+    fill: var(--blue);
+    stroke: var(--blue-soft);
+    stroke-width: 0.5;
+    cursor: pointer;
+    transition: fill 0.3s ease, filter 0.3s ease, stroke-width 0.3s ease;
+  }
+  .country-active:hover {
+    fill: var(--blue-soft);
+    stroke: var(--blue);
+    stroke-width: 1;
+    filter: drop-shadow(0 0 10px var(--blue-glow));
+  }
+  .graticule {
+    fill: none;
+    stroke: rgba(0, 0, 255, 0.05);
+    stroke-width: 0.4;
+  }
+  .sphere {
+    fill: var(--white);
+    stroke: var(--line);
+    stroke-width: 0.5;
+  }
+
+  /* tooltip */
+  .map-tooltip {
+    position: absolute;
+    background: var(--white);
+    border: 1px solid var(--blue);
+    padding: 12px 16px;
+    pointer-events: none;
+    font-family: 'Rajdhani', sans-serif;
+    transform: translate(-50%, -130%);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 5;
+    box-shadow: 0 4px 16px rgba(0, 0, 255, 0.12);
+  }
+  .map-tooltip.visible { opacity: 1; }
+  .map-tooltip-title {
+    color: var(--blue);
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .map-tooltip-sub {
+    color: var(--ink-dim);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    margin-top: 4px;
+    text-transform: uppercase;
+  }
+
+  /* coordinate readout */
+  .coord-readout {
+    position: absolute;
+    bottom: 18px;
+    left: 28px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--ink-faint);
+    pointer-events: none;
+    z-index: 2;
+  }
+  .coord-readout span { color: var(--blue); }
+
+  /* REGION GRID */
+  .regions { margin-top: 40px; }
+  .regions h3 {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    margin: 0 0 20px;
+    font-weight: 400;
+  }
+  .region-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    border-left: 1px solid var(--line);
+    border-top: 1px solid var(--line);
+    background: var(--white);
+  }
+  .region-cell {
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 18px 22px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    position: relative;
+  }
+  .region-cell:hover { background: var(--blue-tint); }
+  .region-cell:hover .region-name { color: var(--blue); }
+  .region-cell .region-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    transition: color 0.2s ease;
+  }
+  .region-cell .region-tokens {
+    font-family: 'Space Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-dim);
+    letter-spacing: 1px;
+  }
+  .region-cell .region-tokens .tok { color: var(--blue); }
+  .region-cell::after {
+    content: '→';
+    position: absolute;
+    top: 16px;
+    right: 18px;
+    color: var(--ink-faint);
+    font-size: 14px;
+    transition: color 0.2s ease, transform 0.2s ease;
+  }
+  .region-cell:hover::after { color: var(--blue); transform: translateX(3px); }
+
+  /* MODAL */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(6, 6, 31, 0.55);
+    backdrop-filter: blur(6px);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .modal-backdrop.open { display: flex; animation: fadeIn 200ms ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--white);
+    border: 1px solid var(--blue);
+    max-width: 540px;
+    width: 100%;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0, 0, 255, 0.18);
+    animation: modalIn 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: translateY(12px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .modal::before, .modal::after {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+    border: 1px solid var(--blue);
+  }
+  .modal::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+  .modal::after  { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+
+  .modal-header {
+    padding: 26px 30px 18px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .modal-meta {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 10px;
+  }
+  .modal-country {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 38px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+  .modal-close {
+    background: var(--off);
+    border: 1px solid var(--line);
+    color: var(--ink-dim);
+    width: 34px; height: 34px;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center; justify-content: center;
+  }
+  .modal-close:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+    background: var(--white);
+  }
+  .modal-body { padding: 26px 30px 30px; }
+  .field { margin-bottom: 22px; }
+  .field:last-child { margin-bottom: 0; }
+  .field-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    margin-bottom: 12px;
+  }
+  .symbol-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .symbol-pill {
+    border: 1px solid var(--blue);
+    color: var(--blue);
+    padding: 8px 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 1px;
+    font-weight: 700;
+    background: var(--blue-tint);
+  }
+  .mcap-row {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    padding: 14px 0;
+    border-top: 1px dashed var(--line);
+    border-bottom: 1px dashed var(--line);
+  }
+  .mcap-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--ink-faint);
+  }
+  .mcap-note {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+  }
+  .network-line {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: var(--ink);
+  }
+  .network-line span { color: var(--blue); font-weight: 700; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 28px 40px;
+    margin-top: 60px;
+    color: var(--ink-dim);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    background: var(--white);
+  }
+  footer span { color: var(--blue); }
+
+  /* loading state */
+  .map-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+    z-index: 4;
+    background: var(--white);
+  }
+  .map-loading.hidden { display: none; }
+
+  @media (max-width: 760px) {
+    nav.topbar { padding: 14px 20px; }
+    header.hero { padding: 50px 20px 24px; }
+    .stats { grid-template-columns: repeat(2, 1fr); margin: 32px 20px 0; }
+    .stat:nth-child(2) { border-right: none; }
+    .stat:nth-child(1), .stat:nth-child(2) { border-bottom: 1px solid var(--line); }
+    .map-section { padding: 32px 20px 16px; }
+    footer { padding: 20px; }
+    .modal-country { font-size: 30px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="brand"><span class="dot"></span>STABLECOIN.MAP</div>
+  <div class="meta-pill">NETWORK <span>BASE</span> &nbsp;·&nbsp; v 1.0</div>
+</nav>
+
+<header class="hero">
+  <div class="section-label">// GLOBAL COVERAGE</div>
+  <h1 class="hero-title">International stablecoins,<br/><em>natively on Base.</em></h1>
+  <p class="lede">
+    A live atlas of <strong>non-USD stablecoin issuance</strong> deployed on the Base network — spanning fiat-backed tokens across <strong>21 regions</strong> in APAC, LATAM, Europe, and Africa. Click any highlighted territory to inspect the projects issued there.
+  </p>
+</header>
+
+<section class="stats">
+  <div class="stat">
+    <div class="stat-label">REGIONS COVERED</div>
+    <div class="stat-value">21<span class="unit">COUNTRIES</span></div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">PROJECTS TRACKED</div>
+    <div class="stat-value">35<span class="unit">TOKENS</span></div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">NETWORK</div>
+    <div class="stat-value">Base<span class="unit">L2 / OP STACK</span></div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">AGGREGATE MCAP</div>
+    <div class="stat-value">—<span class="unit">PENDING</span></div>
+  </div>
+</section>
+
+<section class="map-section">
+  <div class="map-meta">
+    <h2>Regional Issuance Map</h2>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-swatch swatch-active"></div>ACTIVE ISSUANCE</div>
+      <div class="legend-item"><div class="legend-swatch swatch-inactive"></div>NO COVERAGE</div>
+    </div>
+  </div>
+
+  <div class="map-container" id="mapContainer">
+    <span class="map-corner tl"></span>
+    <span class="map-corner tr"></span>
+    <span class="map-corner bl"></span>
+    <span class="map-corner br"></span>
+
+    <div class="map-loading" id="mapLoading">// loading world atlas …</div>
+
+    <svg class="map-svg" id="mapSvg" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet"></svg>
+
+    <div class="map-tooltip" id="mapTooltip">
+      <div class="map-tooltip-title" id="tooltipTitle"></div>
+      <div class="map-tooltip-sub" id="tooltipSub"></div>
+    </div>
+
+    <div class="coord-readout">LAT <span id="lat">00.00</span> · LON <span id="lon">00.00</span> · PROJ EQUIRECTANGULAR</div>
+  </div>
+
+  <div class="regions">
+    <h3>// REGISTRY · 21 REGIONS</h3>
+    <div class="region-grid" id="regionGrid"></div>
+  </div>
+</section>
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-meta" id="mRegion">// REGION</div>
+        <div class="modal-country" id="mCountry">Country</div>
+      </div>
+      <button class="modal-close" id="mClose" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <div class="field-label">PROJECT SYMBOLS</div>
+        <div class="symbol-list" id="mSymbols"></div>
+      </div>
+      <div class="field">
+        <div class="field-label">MARKET CAP</div>
+        <div class="mcap-row">
+          <div class="mcap-value" id="mMcap">—</div>
+          <div class="mcap-note">// to be populated</div>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">NETWORK</div>
+        <div class="network-line"><span>BASE</span> · L2 (OP STACK)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div>© 2026 STABLECOIN.MAP · BUILT FOR <span>BASE</span></div>
+  <div>DATA · MANUAL CURATION · v1.0</div>
+</footer>
+
+<script>
+/* -------------------------------------------------------
+   DATA — keyed by ISO 3166-1 numeric (matches world-atlas)
+   ------------------------------------------------------- */
+const DATA = {
+  484: { country: "Mexico",         region: "LATAM",          symbols: ["MXNE","MXNB"],            centroid: [23, -102] },
+  360: { country: "Indonesia",      region: "SOUTHEAST ASIA", symbols: ["IDRX"],                   centroid: [-2, 118] },
+  566: { country: "Nigeria",        region: "AFRICA",         symbols: ["CNGN","NGNC"],            centroid: [10, 8] },
+  710: { country: "South Africa",   region: "AFRICA",         symbols: ["ZARP"],                   centroid: [-30, 25] },
+  554: { country: "New Zealand",    region: "OCEANIA",        symbols: ["NZDD"],                   centroid: [-41, 174] },
+  124: { country: "Canada",         region: "NORTH AMERICA",  symbols: ["CADC"],                   centroid: [56, -106] },
+   76: { country: "Brazil",         region: "LATAM",          symbols: ["BRZ","BRLA","BRLY"],      centroid: [-10, -55] },
+  792: { country: "Turkey",         region: "EUROPE / MENA",  symbols: ["TRYB"],                   centroid: [39, 35] },
+  756: { country: "Switzerland",    region: "EUROPE",         symbols: ["VCHF"],                   centroid: [47, 8] },
+  826: { country: "United Kingdom", region: "EUROPE",         symbols: ["VGBP","TGBP"],            centroid: [54, -2] },
+   32: { country: "Argentina",      region: "LATAM",          symbols: ["ARST","ARGT","wARS","ARSX"], centroid: [-34, -64] },
+   36: { country: "Australia",      region: "OCEANIA",        symbols: ["AUDD","AUDF"],            centroid: [-25, 134] },
+  764: { country: "Thailand",       region: "SOUTHEAST ASIA", symbols: ["THBT"],                   centroid: [15, 100] },
+  458: { country: "Malaysia",       region: "SOUTHEAST ASIA", symbols: ["MYRC"],                   centroid: [4, 102] },
+  800: { country: "Uganda",         region: "AFRICA",         symbols: ["UGXC"],                   centroid: [1, 32] },
+  702: { country: "Singapore",      region: "SOUTHEAST ASIA", symbols: ["XSGD"],                   centroid: [1.3, 103.8] },
+  834: { country: "Tanzania",       region: "AFRICA",         symbols: ["nTZS"],                   centroid: [-6, 35] },
+  170: { country: "Colombia",       region: "LATAM",          symbols: ["WCOP"],                   centroid: [4, -73] },
+  604: { country: "Peru",           region: "LATAM",          symbols: ["WPEN"],                   centroid: [-10, -76] },
+  152: { country: "Chile",          region: "LATAM",          symbols: ["WCLP"],                   centroid: [-30, -71] },
+};
+
+/* EU member states — all painted the same blue, all route to the EU modal */
+const EU_MEMBERS = [40,56,100,191,196,203,208,233,246,250,276,300,348,372,380,428,440,442,470,528,616,620,642,703,705,724,752];
+const EU_INFO = { country: "European Union", region: "EUROPE", symbols: ["EURC","EURAU","VEUR"], centroid: [50, 10] };
+
+/* Full lookup: ISO numeric → info (DATA + EU members) */
+const COUNTRY_LOOKUP = { ...DATA };
+EU_MEMBERS.forEach(id => { COUNTRY_LOOKUP[id] = EU_INFO; });
+
+/* -------------------------------------------------------
+   REGION GRID
+   ------------------------------------------------------- */
+const grid = document.getElementById("regionGrid");
+const gridEntries = [
+  ...Object.entries(DATA).map(([id, info]) => ({ id: parseInt(id), info })),
+  { id: "EU", info: EU_INFO },
+];
+gridEntries
+  .sort((a, b) => a.info.country.localeCompare(b.info.country))
+  .forEach(({ info }) => {
+    const cell = document.createElement("div");
+    cell.className = "region-cell";
+    cell.addEventListener("click", () => openModal(info));
+    cell.innerHTML = `
+      <div class="region-name">${info.country}</div>
+      <div class="region-tokens">${info.symbols.map(s => `<span class="tok">${s}</span>`).join(" · ")}</div>
+    `;
+    grid.appendChild(cell);
+  });
+
+/* -------------------------------------------------------
+   MODAL
+   ------------------------------------------------------- */
+const modal     = document.getElementById("modal");
+const mCountry  = document.getElementById("mCountry");
+const mRegion   = document.getElementById("mRegion");
+const mSymbols  = document.getElementById("mSymbols");
+const mMcap     = document.getElementById("mMcap");
+const mClose    = document.getElementById("mClose");
+
+function openModal(info) {
+  if (!info) return;
+  mCountry.textContent = info.country;
+  mRegion.textContent  = `// ${info.region}`;
+  mSymbols.innerHTML   = info.symbols.map(s => `<div class="symbol-pill">${s}</div>`).join("");
+  mMcap.textContent    = info.mcap ?? "—";   // null placeholder — fill later
+  modal.classList.add("open");
+}
+function closeModal() { modal.classList.remove("open"); }
+
+mClose.addEventListener("click", closeModal);
+modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+
+/* -------------------------------------------------------
+   MAP — real geography via D3 + world-atlas TopoJSON
+   ------------------------------------------------------- */
+const tooltip      = document.getElementById("mapTooltip");
+const tooltipTitle = document.getElementById("tooltipTitle");
+const tooltipSub   = document.getElementById("tooltipSub");
+const container    = document.getElementById("mapContainer");
+const mapLoading   = document.getElementById("mapLoading");
+
+const TOPO_SOURCES = [
+  "countries-50m.json",
+  "countries-110m.json",
+  "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json",
+  "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json",
+];
+
+async function fetchWithTimeout(url, ms = 10000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function loadTopology() {
+  let lastErr;
+  for (let i = 0; i < TOPO_SOURCES.length; i++) {
+    const url = TOPO_SOURCES[i];
+    mapLoading.textContent = `// loading world atlas …`;
+    try {
+      const data = await fetchWithTimeout(url);
+      if (data && data.objects && data.objects.countries) {
+        return data;
+      }
+      lastErr = new Error("Invalid topology shape");
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  throw lastErr || new Error("All sources failed");
+}
+
+async function buildMap() {
+  // sanity check — make sure D3 + topojson actually loaded
+  if (typeof d3 === "undefined" || typeof topojson === "undefined") {
+    mapLoading.textContent = "// d3 or topojson script failed to load — check connection";
+    return;
+  }
+
+  const svg = d3.select("#mapSvg");
+  const W = 1000, H = 500;
+
+  const projection = d3.geoEquirectangular()
+    .scale(W / (2 * Math.PI))
+    .translate([W / 2, H / 2]);
+
+  const pathGen = d3.geoPath().projection(projection);
+
+  // sphere / ocean background
+  svg.append("path")
+     .attr("class", "sphere")
+     .attr("d", pathGen({ type: "Sphere" }));
+
+  // graticule
+  const graticule = d3.geoGraticule().step([20, 20]);
+  svg.append("path")
+     .attr("class", "graticule")
+     .attr("d", pathGen(graticule()));
+
+  let world;
+  try {
+    world = await loadTopology();
+  } catch (err) {
+    mapLoading.innerHTML = `// failed to load world atlas<br><span style="color:var(--ink-faint);font-size:9px;letter-spacing:1px;">${err.message} — check network / disable adblock</span>`;
+    console.error("Topology load failed:", err);
+    return;
+  }
+
+  const countries = topojson.feature(world, world.objects.countries).features;
+  const g = svg.append("g");
+
+  /* EU bounding box — keeps mainland + Canary Islands/Azores/Madeira,
+     strips French Guiana, Martinique, Guadeloupe, Réunion, Mayotte,
+     Netherlands Caribbean, etc. */
+  const EU_BBOX = { minLon: -35, maxLon: 45, minLat: 27, maxLat: 72 };
+
+  function euClip(feat) {
+    if (feat.geometry.type !== "MultiPolygon") return feat;
+    const filtered = feat.geometry.coordinates.filter(polyCoords => {
+      const [lon, lat] = d3.geoCentroid({ type: "Feature", geometry: { type: "Polygon", coordinates: polyCoords } });
+      return lon >= EU_BBOX.minLon && lon <= EU_BBOX.maxLon &&
+             lat >= EU_BBOX.minLat && lat <= EU_BBOX.maxLat;
+    });
+    if (!filtered.length) return null;
+    return { ...feat, geometry: { type: "MultiPolygon", coordinates: filtered } };
+  }
+
+  /* Countries whose polygons are sub-pixel at this projection scale —
+     rendered as dot markers instead of paths. [lon, lat] */
+  const DOT_OVERRIDES = new Set([702]); // Singapore
+
+  function attachHandlers(sel, info) {
+    sel.on("mouseenter", function() {
+          const [lat, lon] = info.centroid;
+          document.getElementById("lat").textContent = lat.toFixed(2);
+          document.getElementById("lon").textContent = lon.toFixed(2);
+          tooltipTitle.textContent = info.country;
+          tooltipSub.textContent   = info.symbols.join(" · ");
+          tooltip.classList.add("visible");
+        })
+        .on("mousemove", function(event) {
+          const rect = container.getBoundingClientRect();
+          tooltip.style.left = (event.clientX - rect.left) + "px";
+          tooltip.style.top  = (event.clientY - rect.top)  + "px";
+        })
+        .on("mouseleave", function() {
+          tooltip.classList.remove("visible");
+        })
+        .on("click", function() { openModal(info); });
+  }
+
+  countries.forEach(feat => {
+    const idNum = typeof feat.id === "string" ? parseInt(feat.id, 10) : feat.id;
+    const info = COUNTRY_LOOKUP[idNum];
+    const isEU = EU_MEMBERS.includes(idNum);
+
+    if (DOT_OVERRIDES.has(idNum)) return; // handled separately below
+
+    const renderFeat = (info && isEU) ? euClip(feat) : feat;
+    if (!renderFeat) return;
+
+    const d = pathGen(renderFeat);
+    if (!d) return;
+
+    if (info) {
+      const p = g.append("path")
+        .attr("d", d)
+        .attr("class", "country-active")
+        .attr("data-id", idNum);
+      attachHandlers(p, info);
+    } else {
+      g.append("path")
+        .attr("d", d)
+        .attr("class", "country-base");
+    }
+  });
+
+  /* Dot markers for countries too small to see as polygon paths */
+  DOT_OVERRIDES.forEach(dotId => {
+    const info = COUNTRY_LOOKUP[dotId];
+    if (!info) return;
+    const [lat, lon] = info.centroid;
+    const [sx, sy] = projection([lon, lat]);
+    if (!isFinite(sx) || !isFinite(sy)) return;
+
+    // pulse ring
+    g.append("circle")
+      .attr("cx", sx).attr("cy", sy).attr("r", 7)
+      .attr("fill", "none")
+      .attr("stroke", "var(--blue)")
+      .attr("stroke-width", 1)
+      .attr("opacity", 0.45)
+      .attr("pointer-events", "none");
+
+    const dot = g.append("circle")
+      .attr("cx", sx).attr("cy", sy).attr("r", 4.5)
+      .attr("fill", "var(--blue)")
+      .attr("stroke", "var(--blue-soft)")
+      .attr("stroke-width", 0.8)
+      .style("cursor", "pointer");
+    attachHandlers(dot, info);
+  });
+
+  mapLoading.classList.add("hidden");
+}
+
+// Wait for the page to settle so the CDN scripts have a moment to attach
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", buildMap);
+} else {
+  buildMap();
+}
+</script>
+
+</body>
+</html>
