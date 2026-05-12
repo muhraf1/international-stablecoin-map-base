@@ -42,6 +42,7 @@
 
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <style>
   :root {
@@ -562,6 +563,82 @@
   }
   .map-loading.hidden { display: none; }
 
+  /* DATA SECTIONS */
+  header.hero { scroll-margin-top: calc(var(--topbar-h) + 20px); }
+  .data-section {
+    padding: 60px 40px 40px;
+    max-width: 1300px;
+    margin: 0 auto;
+    border-top: 1px solid var(--line);
+    scroll-margin-top: calc(var(--topbar-h) + 20px);
+  }
+  .ds-header { margin-bottom: 28px; }
+  .ds-cluster {
+    font-family: 'Doto', monospace; font-weight: 500;
+    font-size: 9px; letter-spacing: 5px; text-transform: uppercase;
+    color: var(--blue); margin-bottom: 8px;
+  }
+  .ds-title {
+    font-family: 'Coinbase Sans', sans-serif;
+    font-size: clamp(22px, 3vw, 32px); font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--ink); margin-bottom: 8px;
+  }
+  .ds-desc {
+    font-size: 14px; color: var(--ink-dim); font-weight: 300;
+    max-width: 640px; line-height: 1.7;
+  }
+  /* KPI row */
+  .ds-kpis {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(170px,1fr));
+    background: var(--white);
+    border: 1px solid var(--line); margin-bottom: 20px;
+  }
+  .ds-kpi { padding: 18px 22px; border-right: 1px solid var(--line); }
+  .ds-kpi:last-child { border-right: none; }
+  .ds-kpi-label {
+    font-family: 'Doto', monospace; font-weight: 500;
+    font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--ink-faint); margin-bottom: 8px;
+  }
+  .ds-kpi-val {
+    font-family: 'Coinbase Sans', sans-serif;
+    font-size: 26px; font-weight: 700; color: var(--ink); line-height: 1; margin-bottom: 4px;
+  }
+  .ds-kpi-val .u {
+    font-family: 'Doto', monospace; font-weight: 500;
+    font-size: 9px; color: var(--blue); letter-spacing: 2px; margin-left: 4px;
+  }
+  .ds-kpi-sub {
+    font-family: 'Doto', monospace; font-weight: 500;
+    font-size: 10px; letter-spacing: 1px;
+  }
+  .ds-kpi-sub.up   { color: #16a34a; }
+  .ds-kpi-sub.down { color: #dc2626; }
+  .ds-kpi-sub.flat { color: var(--ink-faint); }
+  /* Chart cards */
+  .ds-charts {
+    display: grid; gap: 1px;
+    background: var(--line); border: 1px solid var(--line);
+  }
+  .ds-charts.c1 { grid-template-columns: 1fr; }
+  .ds-charts.c2 { grid-template-columns: 2fr 1fr; }
+  .ds-chart-card { background: var(--white); padding: 22px 24px; }
+  .ds-chart-lbl {
+    font-family: 'Doto', monospace; font-weight: 500;
+    font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--ink-dim); margin-bottom: 16px;
+  }
+  .ds-chart-body { position: relative; height: 280px; }
+  .ds-chart-body.sm { height: 210px; }
+  @media (max-width: 760px) {
+    .data-section { padding: 40px 20px 24px; }
+    .ds-charts.c2 { grid-template-columns: 1fr; }
+    .ds-kpis { grid-template-columns: repeat(2,1fr); }
+    .ds-kpi:nth-child(2) { border-right: none; }
+    .ds-kpi:nth-child(1),.ds-kpi:nth-child(2) { border-bottom: 1px solid var(--line); }
+  }
+
   /* SIDEBAR */
   .sidenav {
     position: fixed;
@@ -666,44 +743,43 @@
 <aside class="sidenav">
 
   <div class="sidenav-group">
-    <div class="sidenav-group-label">Market</div>
-    <a class="sidenav-item active" href="#">
-      <span class="sidenav-pip"></span>Supply
-    </a>
+    <div class="sidenav-group-label">Issuance</div>
+    <a class="sidenav-item active" href="#supply"><span class="sidenav-pip"></span>Supply</a>
+    <a class="sidenav-item" href="#peg-health"><span class="sidenav-pip"></span>Peg Stability</a>
   </div>
 
   <div class="sidenav-divider"></div>
 
   <div class="sidenav-group">
     <div class="sidenav-group-label">Flow</div>
-    <a class="sidenav-item" href="#">
-      <span class="sidenav-pip"></span>Transfer Volume
-    </a>
-    <a class="sidenav-item" href="#">
-      <span class="sidenav-pip"></span>Velocity
-    </a>
-    <a class="sidenav-item" href="#">
-      <span class="sidenav-pip"></span>Transactions
-    </a>
+    <a class="sidenav-item" href="#transfer-volume"><span class="sidenav-pip"></span>Transfer Volume</a>
+    <a class="sidenav-item" href="#transactions"><span class="sidenav-pip"></span>Transactions</a>
+    <a class="sidenav-item" href="#velocity"><span class="sidenav-pip"></span>Velocity</a>
+    <a class="sidenav-item" href="#bridge-volume"><span class="sidenav-pip"></span>Bridge Volume</a>
   </div>
 
   <div class="sidenav-divider"></div>
 
   <div class="sidenav-group">
-    <div class="sidenav-group-label">Users</div>
-    <a class="sidenav-item" href="#">
-      <span class="sidenav-pip"></span>Active Wallets
-    </a>
-    <a class="sidenav-item" href="#">
-      <span class="sidenav-pip"></span>Dex Activity
-    </a>
+    <div class="sidenav-group-label">Market</div>
+    <a class="sidenav-item" href="#dex-activity"><span class="sidenav-pip"></span>DEX Activity</a>
+    <a class="sidenav-item" href="#fx-corridors"><span class="sidenav-pip"></span>FX Corridors</a>
+    <a class="sidenav-item" href="#liquidity"><span class="sidenav-pip"></span>Liquidity</a>
+  </div>
+
+  <div class="sidenav-divider"></div>
+
+  <div class="sidenav-group">
+    <div class="sidenav-group-label">Adoption</div>
+    <a class="sidenav-item" href="#active-wallets"><span class="sidenav-pip"></span>Active Wallets</a>
+    <a class="sidenav-item" href="#holders"><span class="sidenav-pip"></span>Holder Distribution</a>
   </div>
 
 </aside>
 
 <div class="page-body">
 
-<header class="hero">
+<header class="hero" id="supply">
   <div class="section-label">// GLOBAL COVERAGE</div>
   <h1 class="hero-title">International stablecoins,<br/><em>natively on Base.</em></h1>
   <p class="lede">
@@ -760,6 +836,228 @@
   <div class="regions">
     <h3>// REGISTRY · 21 REGIONS</h3>
     <div class="region-grid" id="regionGrid"></div>
+  </div>
+</section>
+
+<!-- ═══ PEG STABILITY ═══ -->
+<section class="data-section" id="peg-health">
+  <div class="ds-header">
+    <p class="ds-cluster">// ISSUANCE</p>
+    <h2 class="ds-title">Peg Stability</h2>
+    <p class="ds-desc">Price deviation of each stablecoin from its target fiat peg. A healthy token stays within ±0.5% — the onchain equivalent of a central bank's FX intervention band and the primary trust signal for cross-border settlement.</p>
+  </div>
+  <div class="ds-kpis">
+    <div class="ds-kpi"><div class="ds-kpi-label">MAX DEVIATION (30D)</div><div class="ds-kpi-val">0.42<span class="u">%</span></div><div class="ds-kpi-sub flat">WITHIN BAND</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">AVG DEVIATION</div><div class="ds-kpi-val">0.11<span class="u">%</span></div><div class="ds-kpi-sub up">STABLE</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">TOKENS AT PEG</div><div class="ds-kpi-val">18<span class="u">/ 21</span></div><div class="ds-kpi-sub up">86%</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">WEAKEST PEG</div><div class="ds-kpi-val">TRYB</div><div class="ds-kpi-sub down">−0.38%</div></div>
+  </div>
+  <div class="ds-charts c1">
+    <div class="ds-chart-card">
+      <div class="ds-chart-lbl">// PRICE vs PEG — TOP 6 TOKENS · 90 DAYS</div>
+      <div class="ds-chart-body"><canvas id="chart-peg"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TRANSFER VOLUME ═══ -->
+<section class="data-section" id="transfer-volume">
+  <div class="ds-header">
+    <p class="ds-cluster">// FLOW</p>
+    <h2 class="ds-title">Transfer Volume</h2>
+    <p class="ds-desc">Total USD-equivalent value transferred on-chain. The primary signal of stablecoin utility as a settlement layer — analogous to SWIFT's daily FX turnover but operating 24/7 with near-instant finality.</p>
+  </div>
+  <div class="ds-kpis">
+    <div class="ds-kpi"><div class="ds-kpi-label">7D VOLUME</div><div class="ds-kpi-val">$284<span class="u">M</span></div><div class="ds-kpi-sub up">+12.4%</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">30D VOLUME</div><div class="ds-kpi-val">$1.1<span class="u">B</span></div><div class="ds-kpi-sub up">+8.7%</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">AVG TXN SIZE</div><div class="ds-kpi-val">$1,240</div><div class="ds-kpi-sub down">−3.1%</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">TOP TOKEN</div><div class="ds-kpi-val">EURC</div><div class="ds-kpi-sub flat">41% SHARE</div></div>
+  </div>
+  <div class="ds-charts c1">
+    <div class="ds-chart-card">
+      <div class="ds-chart-lbl">// WEEKLY TRANSFER VOLUME BY TOKEN (USD)</div>
+      <div class="ds-chart-body"><canvas id="chart-volume"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TRANSACTIONS ═══ -->
+<section class="data-section" id="transactions">
+  <div class="ds-header">
+    <p class="ds-cluster">// FLOW</p>
+    <h2 class="ds-title">Transactions</h2>
+    <p class="ds-desc">Count of on-chain transfers segmented by size — micro (&lt;$10), retail ($10–$10K), wholesale (&gt;$10K). The size distribution reveals whether a token serves remittances, merchant payments, or institutional FX settlement.</p>
+  </div>
+  <div class="ds-kpis">
+    <div class="ds-kpi"><div class="ds-kpi-label">DAILY AVG</div><div class="ds-kpi-val">38.4<span class="u">K</span></div><div class="ds-kpi-sub up">+22%</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">30D TOTAL</div><div class="ds-kpi-val">1.15<span class="u">M</span></div><div class="ds-kpi-sub up">+18%</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">MICRO SHARE</div><div class="ds-kpi-val">54<span class="u">%</span></div><div class="ds-kpi-sub up">+4pp</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">WHOLESALE</div><div class="ds-kpi-val">8<span class="u">%</span></div><div class="ds-kpi-sub flat">STABLE</div></div>
+  </div>
+  <div class="ds-charts c2">
+    <div class="ds-chart-card">
+      <div class="ds-chart-lbl">// DAILY TRANSACTIONS · 13-WEEK VIEW</div>
+      <div class="ds-chart-body"><canvas id="chart-txns"></canvas></div>
+    </div>
+    <div class="ds-chart-card">
+      <div class="ds-chart-lbl">// SIZE DISTRIBUTION</div>
+      <div class="ds-chart-body sm"><canvas id="chart-txns-dist"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ VELOCITY ═══ -->
+<section class="data-section" id="velocity">
+  <div class="ds-header">
+    <p class="ds-cluster">// FLOW</p>
+    <h2 class="ds-title">Velocity</h2>
+    <p class="ds-desc">Annualised turnover rate (Transfer Volume ÷ Circulating Supply). High velocity means capital is actively circulating rather than being held — the onchain proxy for FX market liquidity depth. SWIFT's FX benchmark sits near 2.5×.</p>
+  </div>
+  <div class="ds-kpis">
+    <div class="ds-kpi"><div class="ds-kpi-label">AVG VELOCITY (30D)</div><div class="ds-kpi-val">14.2<span class="u">×</span></div><div class="ds-kpi-sub up">+1.8×</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">HIGHEST</div><div class="ds-kpi-val">IDRX</div><div class="ds-kpi-sub flat">31× / YR</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">LOWEST</div><div class="ds-kpi-val">VCHF</div><div class="ds-kpi-sub flat">4.1× / YR</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">vs SWIFT FX</div><div class="ds-kpi-val">5.7<span class="u">×</span></div><div class="ds-kpi-sub up">FASTER</div></div>
+  </div>
+  <div class="ds-charts c1">
+    <div class="ds-chart-card">
+      <div class="ds-chart-lbl">// MONTHLY VELOCITY BY TOKEN (ANNUALISED) vs SWIFT BENCHMARK</div>
+      <div class="ds-chart-body"><canvas id="chart-velocity"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ BRIDGE VOLUME ═══ -->
+<section class="data-section" id="bridge-volume">
+  <div class="ds-header">
+    <p class="ds-cluster">// FLOW</p>
+    <h2 class="ds-title">Bridge Volume</h2>
+    <p class="ds-desc">Volume of international stablecoins bridged to and from Base across chains. Cross-chain movement is the digital equivalent of interbank NOSTRO/VOSTRO transfers — capital moving between settlement venues without losing peg.</p>
+  </div>
+  <div class="ds-kpis">
+    <div class="ds-kpi"><div class="ds-kpi-label">30D BRIDGE VOL</div><div class="ds-kpi-val">$340<span class="u">M</span></div><div class="ds-kpi-sub up">+31%</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">NET INFLOW</div><div class="ds-kpi-val">+$56<span class="u">M</span></div><div class="ds-kpi-sub up">BASE GROWING</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">TOP BRIDGE</div><div class="ds-kpi-val">CCTP</div><div class="ds-kpi-sub flat">CIRCLE</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">CHAINS ACTIVE</div><div class="ds-kpi-val">7</div><div class="ds-kpi-sub up">+2 NEW</div></div>
+  </div>
+  <div class="ds-charts c1">
+    <div class="ds-chart-card">
+      <div class="ds-chart-lbl">// BRIDGE INFLOW / OUTFLOW BY SOURCE CHAIN (30D, USD)</div>
+      <div class="ds-chart-body sm"><canvas id="chart-bridge"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ DEX ACTIVITY ═══ -->
+<section class="data-section" id="dex-activity">
+  <div class="ds-header">
+    <p class="ds-cluster">// MARKET</p>
+    <h2 class="ds-title">DEX Activity</h2>
+    <p class="ds-desc">Decentralised exchange trading volume for international stablecoin pairs on Base. Reflects continuous price discovery and arbitrage — the onchain equivalent of an FX spot market operating without a central counterparty.</p>
+  </div>
+  <div class="ds-kpis">
+    <div class="ds-kpi"><div class="ds-kpi-label">24H DEX VOLUME</div><div class="ds-kpi-val">$42<span class="u">M</span></div><div class="ds-kpi-sub up">+9%</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">TOTAL LIQUIDITY</div><div class="ds-kpi-val">$180<span class="u">M</span></div><div class="ds-kpi-sub up">+5%</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">ACTIVE PAIRS</div><div class="ds-kpi-val">34</div><div class="ds-kpi-sub up">+6</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">TOP VENUE</div><div class="ds-kpi-val">AERO</div><div class="ds-kpi-sub flat">AERODROME</div></div>
+  </div>
+  <div class="ds-charts c2">
+    <div class="ds-chart-card">
+      <div class="ds-chart-lbl">// WEEKLY DEX VOLUME BY VENUE (USD)</div>
+      <div class="ds-chart-body"><canvas id="chart-dex"></canvas></div>
+    </div>
+    <div class="ds-chart-card">
+      <div class="ds-chart-lbl">// VOLUME SHARE BY VENUE</div>
+      <div class="ds-chart-body sm"><canvas id="chart-dex-venues"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FX CORRIDORS ═══ -->
+<section class="data-section" id="fx-corridors">
+  <div class="ds-header">
+    <p class="ds-cluster">// MARKET</p>
+    <h2 class="ds-title">FX Corridors</h2>
+    <p class="ds-desc">Volume across currency-pair corridors — the onchain equivalent of MSCI FX market analysis. Identifies which bilateral payment routes are migrating from SWIFT to stablecoin rails, with emerging markets growing fastest.</p>
+  </div>
+  <div class="ds-kpis">
+    <div class="ds-kpi"><div class="ds-kpi-label">ACTIVE CORRIDORS</div><div class="ds-kpi-val">12</div><div class="ds-kpi-sub up">+3 NEW</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">TOP CORRIDOR</div><div class="ds-kpi-val">EUR↔USD</div><div class="ds-kpi-sub flat">$280M / MO</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">FASTEST GROWTH</div><div class="ds-kpi-val">BRL↔USD</div><div class="ds-kpi-sub up">+68% MOM</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">EM SHARE</div><div class="ds-kpi-val">44<span class="u">%</span></div><div class="ds-kpi-sub up">+8pp</div></div>
+  </div>
+  <div class="ds-charts c1">
+    <div class="ds-chart-card">
+      <div class="ds-chart-lbl">// MONTHLY CORRIDOR VOLUME (USD) — TOP 8 PAIRS</div>
+      <div class="ds-chart-body"><canvas id="chart-corridors"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ LIQUIDITY ═══ -->
+<section class="data-section" id="liquidity">
+  <div class="ds-header">
+    <p class="ds-cluster">// MARKET</p>
+    <h2 class="ds-title">Liquidity</h2>
+    <p class="ds-desc">Total value locked in liquidity pools for international stablecoin pairs. Deeper liquidity reduces slippage — the onchain analog of bid-ask spread compression in traditional FX markets studied by the World Bank's remittance price database.</p>
+  </div>
+  <div class="ds-kpis">
+    <div class="ds-kpi"><div class="ds-kpi-label">TOTAL TVL</div><div class="ds-kpi-val">$180<span class="u">M</span></div><div class="ds-kpi-sub up">+14%</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">LARGEST POOL</div><div class="ds-kpi-val">EURC/USDC</div><div class="ds-kpi-sub flat">$48M</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">AVG SLIPPAGE $10K</div><div class="ds-kpi-val">0.08<span class="u">%</span></div><div class="ds-kpi-sub up">−0.02pp</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">POOL COUNT</div><div class="ds-kpi-val">47</div><div class="ds-kpi-sub up">+11</div></div>
+  </div>
+  <div class="ds-charts c1">
+    <div class="ds-chart-card">
+      <div class="ds-chart-lbl">// TVL BY TOKEN (USD) — TOP 10</div>
+      <div class="ds-chart-body sm"><canvas id="chart-liquidity"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ACTIVE WALLETS ═══ -->
+<section class="data-section" id="active-wallets">
+  <div class="ds-header">
+    <p class="ds-cluster">// ADOPTION</p>
+    <h2 class="ds-title">Active Wallets</h2>
+    <p class="ds-desc">Daily and monthly unique addresses transacting international stablecoins on Base — analogous to the World Bank's Financial Access Survey measuring individuals with access to formal payment systems.</p>
+  </div>
+  <div class="ds-kpis">
+    <div class="ds-kpi"><div class="ds-kpi-label">DAILY ACTIVE (AVG)</div><div class="ds-kpi-val">24.7<span class="u">K</span></div><div class="ds-kpi-sub up">+31%</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">MONTHLY ACTIVE</div><div class="ds-kpi-val">218<span class="u">K</span></div><div class="ds-kpi-sub up">+28%</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">NEW WALLETS (30D)</div><div class="ds-kpi-val">42<span class="u">K</span></div><div class="ds-kpi-sub up">+19%</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">90D RETENTION</div><div class="ds-kpi-val">38<span class="u">%</span></div><div class="ds-kpi-sub up">+4pp</div></div>
+  </div>
+  <div class="ds-charts c1">
+    <div class="ds-chart-card">
+      <div class="ds-chart-lbl">// DAILY ACTIVE ADDRESSES + NEW WALLETS · 13-WEEK VIEW</div>
+      <div class="ds-chart-body"><canvas id="chart-wallets"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ HOLDER DISTRIBUTION ═══ -->
+<section class="data-section" id="holders">
+  <div class="ds-header">
+    <p class="ds-cluster">// ADOPTION</p>
+    <h2 class="ds-title">Holder Distribution</h2>
+    <p class="ds-desc">Concentration analysis across wallet size brackets — the onchain equivalent of the World Bank Gini coefficient applied to FX access. High retail share indicates democratised access; institutional dominance may signal limited real-world utility.</p>
+  </div>
+  <div class="ds-kpis">
+    <div class="ds-kpi"><div class="ds-kpi-label">TOTAL HOLDERS</div><div class="ds-kpi-val">310<span class="u">K</span></div><div class="ds-kpi-sub up">+22%</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">TOP 100 SHARE</div><div class="ds-kpi-val">62<span class="u">%</span></div><div class="ds-kpi-sub down">CONCENTRATED</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">RETAIL SHARE</div><div class="ds-kpi-val">89<span class="u">%</span></div><div class="ds-kpi-sub up">+3pp</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">GINI COEFF (AVG)</div><div class="ds-kpi-val">0.78</div><div class="ds-kpi-sub flat">MODERATE</div></div>
+  </div>
+  <div class="ds-charts c2">
+    <div class="ds-chart-card">
+      <div class="ds-chart-lbl">// HOLDER BRACKET DISTRIBUTION — TOP 6 TOKENS</div>
+      <div class="ds-chart-body"><canvas id="chart-holders"></canvas></div>
+    </div>
+    <div class="ds-chart-card">
+      <div class="ds-chart-lbl">// GINI COEFFICIENT TREND (12M)</div>
+      <div class="ds-chart-body sm"><canvas id="chart-gini"></canvas></div>
+    </div>
   </div>
 </section>
 
@@ -1066,6 +1364,368 @@ if (document.readyState === "loading") {
 } else {
   buildMap();
 }
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   CHARTS
+════════════════════════════════════════════════════ */
+(function() {
+  if (typeof Chart === 'undefined') return;
+
+  Chart.defaults.font.family = "'Coinbase Sans', sans-serif";
+  Chart.defaults.font.size   = 11;
+  Chart.defaults.color       = '#4a5266';
+  Chart.defaults.borderColor = 'rgba(216,221,229,0.5)';
+  Chart.defaults.plugins.legend.labels.boxWidth        = 10;
+  Chart.defaults.plugins.legend.labels.padding         = 14;
+  Chart.defaults.plugins.legend.labels.usePointStyle   = true;
+  Chart.defaults.plugins.tooltip.backgroundColor       = '#ffffff';
+  Chart.defaults.plugins.tooltip.titleColor            = '#06061f';
+  Chart.defaults.plugins.tooltip.bodyColor             = '#4a5266';
+  Chart.defaults.plugins.tooltip.borderColor           = '#d8dde5';
+  Chart.defaults.plugins.tooltip.borderWidth           = 1;
+  Chart.defaults.plugins.tooltip.padding               = 10;
+
+  const MO = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const WK = Array.from({length:13},(_,i)=>`W${i+1}`);
+
+  /* Weekly label series ending today */
+  function wkLabels(n) {
+    return Array.from({length:n},(_,i)=>{
+      const d=new Date(2026,4,12); d.setDate(d.getDate()-(n-1-i)*7);
+      return `${d.getMonth()+1}/${d.getDate()}`;
+    });
+  }
+  const W13 = wkLabels(13);
+
+  /* Deterministic pseudo-noise (no random — stable on re-render) */
+  function wave(base, trend, n, amp, phase=0) {
+    return Array.from({length:n},(_,i)=>
+      Math.round(base + trend*i + amp*Math.sin((i+phase)*0.8)));
+  }
+
+  const C = {
+    b0:'#0000ff', b1:'#3c8aff', b2:'#60a5fa', b3:'#93c5fd',
+    b4:'#bfdbfe', b5:'#dbeafe', b6:'#0ea5e9', b7:'#0284c7',
+    gr:'#d8dde5', gt:'rgba(0,0,255,0.07)', ink:'#06061f',
+  };
+  const TOK  = ['EURC','BRLA','MXNE','XSGD','IDRX','ARGT'];
+  const TCOL = [C.b0,C.b1,C.b2,C.b3,C.b6,C.b7];
+
+  function mk(id, cfg) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    new Chart(el, cfg);
+  }
+
+  /* ── PEG STABILITY ── */
+  const pegBase = {EURC:1.001,BRLA:0.999,MXNE:1.002,XSGD:1.000,IDRX:1.001,TRYB:0.997};
+  const pegAmpl = {EURC:0.001,BRLA:0.001,MXNE:0.002,XSGD:0.001,IDRX:0.002,TRYB:0.001};
+  mk('chart-peg',{
+    type:'line',
+    data:{
+      labels: W13,
+      datasets: Object.entries(pegBase).map(([name,base],i)=>({
+        label:name,
+        data: Array.from({length:13},(_,j)=>+(base+pegAmpl[name]*Math.sin((j+i)*1.1)).toFixed(4)),
+        borderColor:[C.b0,C.b1,C.b2,C.b3,C.b6,C.b7][i],
+        backgroundColor:'transparent', borderWidth:1.5, pointRadius:0, tension:0.4,
+      }))
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'top'}},
+      scales:{
+        y:{min:0.993,max:1.007, grid:{color:'rgba(216,221,229,0.4)'},
+           ticks:{callback:v=>v.toFixed(3)}},
+        x:{grid:{display:false}}
+      }
+    }
+  });
+
+  /* ── TRANSFER VOLUME ── */
+  const volBase = {EURC:42,BRLA:18,MXNE:8,XSGD:5,IDRX:2,ARGT:3};
+  mk('chart-volume',{
+    type:'bar',
+    data:{
+      labels:W13,
+      datasets:TOK.map((t,i)=>({
+        label:t,
+        data:wave(volBase[t], (i===0?4:i===1?2:1), 13, volBase[t]*0.12, i),
+        backgroundColor:TCOL[i], borderRadius:2, borderSkipped:false,
+      }))
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'top'}},
+      scales:{
+        x:{stacked:true, grid:{display:false}},
+        y:{stacked:true, grid:{color:'rgba(216,221,229,0.4)'},
+           ticks:{callback:v=>`$${v}M`}}
+      }
+    }
+  });
+
+  /* ── TRANSACTIONS ── */
+  const txData = wave(28000,800,13,3000,1);
+  const txMA   = txData.map((_,i,a)=>i<2?a[i]:Math.round((a[i-2]+a[i-1]+a[i])/3));
+  mk('chart-txns',{
+    type:'bar',
+    data:{
+      labels:W13,
+      datasets:[
+        {label:'Transactions', data:txData, backgroundColor:C.gt, borderColor:C.b0, borderWidth:1},
+        {label:'3-wk MA', data:txMA, type:'line', borderColor:C.b0,
+         backgroundColor:'transparent', borderWidth:2, pointRadius:0, tension:0.4}
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'top'}},
+      scales:{
+        x:{grid:{display:false}},
+        y:{grid:{color:'rgba(216,221,229,0.4)'},
+           ticks:{callback:v=>`${(v/1000).toFixed(0)}K`}}
+      }
+    }
+  });
+  mk('chart-txns-dist',{
+    type:'doughnut',
+    data:{
+      labels:['Micro (<$10)','Retail ($10–$10K)','Wholesale (>$10K)'],
+      datasets:[{data:[54,38,8], backgroundColor:[C.b0,C.b1,C.b3], borderWidth:0, hoverOffset:4}]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'64%',
+      plugins:{legend:{position:'bottom'}}
+    }
+  });
+
+  /* ── VELOCITY ── */
+  const velBase = {EURC:8,BRLA:12,MXNE:10,XSGD:6,IDRX:20,ARGT:14};
+  mk('chart-velocity',{
+    type:'line',
+    data:{
+      labels:MO,
+      datasets:[
+        ...TOK.map((t,i)=>({
+          label:t,
+          data:Array.from({length:12},(_,j)=>+(velBase[t]+j*0.8+Math.sin((j+i)*0.9)*1.2).toFixed(1)),
+          borderColor:TCOL[i], backgroundColor:'transparent',
+          borderWidth:1.5, pointRadius:2, tension:0.3,
+        })),
+        {
+          label:'SWIFT FX Benchmark', data:Array(12).fill(2.5),
+          borderColor:C.gr, backgroundColor:'transparent',
+          borderWidth:1, borderDash:[5,4], pointRadius:0,
+        }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'top'}},
+      scales:{
+        x:{grid:{display:false}},
+        y:{grid:{color:'rgba(216,221,229,0.4)'},
+           ticks:{callback:v=>`${v}×`}}
+      }
+    }
+  });
+
+  /* ── BRIDGE VOLUME ── */
+  mk('chart-bridge',{
+    type:'bar',
+    data:{
+      labels:['Ethereum','Polygon','Arbitrum','Optimism','BNB Chain','Avalanche','Solana'],
+      datasets:[
+        {label:'Inflow',  data:[82,34,28,22,14,10,8],  backgroundColor:C.b0, borderRadius:2},
+        {label:'Outflow', data:[-58,-24,-20,-16,-10,-8,-6], backgroundColor:C.b2, borderRadius:2},
+      ]
+    },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'top'}},
+      scales:{
+        x:{grid:{color:'rgba(216,221,229,0.4)'},
+           ticks:{callback:v=>`$${Math.abs(v)}M`}},
+        y:{grid:{display:false}}
+      }
+    }
+  });
+
+  /* ── DEX ACTIVITY ── */
+  mk('chart-dex',{
+    type:'bar',
+    data:{
+      labels:W13,
+      datasets:[
+        {label:'Aerodrome', data:wave(18,1,13,2,0), backgroundColor:C.b0, borderRadius:2},
+        {label:'Uniswap v3',data:wave(8,0.5,13,1,2), backgroundColor:C.b1, borderRadius:2},
+        {label:'Curve',     data:wave(3,0.2,13,0.5,4),backgroundColor:C.b2, borderRadius:2},
+        {label:'Other',     data:wave(2,0.2,13,0.3,6),backgroundColor:C.b4, borderRadius:2},
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'top'}},
+      scales:{
+        x:{stacked:true, grid:{display:false}},
+        y:{stacked:true, grid:{color:'rgba(216,221,229,0.4)'},
+           ticks:{callback:v=>`$${v}M`}}
+      }
+    }
+  });
+  mk('chart-dex-venues',{
+    type:'doughnut',
+    data:{
+      labels:['Aerodrome','Uniswap v3','Curve','Other'],
+      datasets:[{data:[55,25,12,8], backgroundColor:[C.b0,C.b1,C.b2,C.b4], borderWidth:0, hoverOffset:4}]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'64%',
+      plugins:{legend:{position:'bottom'}}
+    }
+  });
+
+  /* ── FX CORRIDORS ── */
+  const corBase = {
+    'EUR↔USD':180,'BRL↔USD':45,'MXN↔USD':28,
+    'SGD↔USD':20,'IDR↔USD':5,'TRY↔USD':15,'ARS↔USD':8,'Other':10
+  };
+  const corTrend = [5,8,4,2,4,1,2,2];
+  const corCols  = [C.b0,C.b1,C.b2,C.b3,C.b4,C.b6,C.b7,C.gr];
+  mk('chart-corridors',{
+    type:'bar',
+    data:{
+      labels:MO,
+      datasets:Object.entries(corBase).map(([label,base],i)=>({
+        label, borderRadius:2,
+        data:Array.from({length:12},(_,j)=>Math.round(base+corTrend[i]*j+Math.sin((j+i)*0.7)*3)),
+        backgroundColor:corCols[i],
+      }))
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'top'}},
+      scales:{
+        x:{stacked:true, grid:{display:false}},
+        y:{stacked:true, grid:{color:'rgba(216,221,229,0.4)'},
+           ticks:{callback:v=>`$${v}M`}}
+      }
+    }
+  });
+
+  /* ── LIQUIDITY ── */
+  mk('chart-liquidity',{
+    type:'bar',
+    data:{
+      labels:['EURC','BRLA','MXNE','XSGD','IDRX','ARGT','TRYB','VCHF','CADC','NZDD'],
+      datasets:[{
+        label:'TVL (USD)',
+        data:[48,32,24,18,14,12,10,9,8,7],
+        backgroundColor:Array.from({length:10},(_,i)=>`rgba(0,0,255,${0.9-i*0.08})`),
+        borderRadius:3,
+      }]
+    },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{color:'rgba(216,221,229,0.4)'},
+           ticks:{callback:v=>`$${v}M`}},
+        y:{grid:{display:false}}
+      }
+    }
+  });
+
+  /* ── ACTIVE WALLETS ── */
+  const walData = wave(18000,700,13,2200,2);
+  const newData = wave(3000,200,13,500,5);
+  mk('chart-wallets',{
+    type:'line',
+    data:{
+      labels:W13,
+      datasets:[
+        {label:'Total Active', data:walData,
+         borderColor:C.b0, backgroundColor:C.gt,
+         borderWidth:2, pointRadius:2, tension:0.4, fill:true},
+        {label:'New Wallets', data:newData,
+         borderColor:C.b1, backgroundColor:'transparent',
+         borderWidth:1.5, pointRadius:2, tension:0.4},
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'top'}},
+      scales:{
+        x:{grid:{display:false}},
+        y:{grid:{color:'rgba(216,221,229,0.4)'},
+           ticks:{callback:v=>`${(v/1000).toFixed(0)}K`}}
+      }
+    }
+  });
+
+  /* ── HOLDER DISTRIBUTION ── */
+  mk('chart-holders',{
+    type:'bar',
+    data:{
+      labels:TOK,
+      datasets:[
+        {label:'>$1M (Whale)',      data:[12,8,10,15,6,20], backgroundColor:C.b0, borderRadius:2},
+        {label:'$100K–$1M (Inst)',  data:[20,15,18,22,12,28],backgroundColor:C.b1, borderRadius:2},
+        {label:'$10K–$100K',        data:[30,28,25,30,22,28],backgroundColor:C.b2, borderRadius:2},
+        {label:'<$10K (Retail)',    data:[38,49,47,33,60,24],backgroundColor:C.b3, borderRadius:2},
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'top'}},
+      scales:{
+        x:{stacked:true, grid:{display:false}},
+        y:{stacked:true, max:100, grid:{color:'rgba(216,221,229,0.4)'},
+           ticks:{callback:v=>`${v}%`}}
+      }
+    }
+  });
+  mk('chart-gini',{
+    type:'line',
+    data:{
+      labels:MO,
+      datasets:TOK.map((t,i)=>({
+        label:t,
+        data:Array.from({length:12},(_,j)=>+(0.84-i*0.025-j*0.003+Math.sin((j+i)*0.9)*0.008).toFixed(3)),
+        borderColor:TCOL[i], backgroundColor:'transparent',
+        borderWidth:1.5, pointRadius:0, tension:0.4,
+      }))
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'top'}},
+      scales:{
+        x:{grid:{display:false}},
+        y:{min:0.6, max:0.9, grid:{color:'rgba(216,221,229,0.4)'},
+           ticks:{stepSize:0.1}}
+      }
+    }
+  });
+
+  /* ── SIDEBAR ACTIVE STATE (IntersectionObserver) ── */
+  const navLinks = document.querySelectorAll('.sidenav-item[href^="#"]');
+  const targets  = document.querySelectorAll('header.hero, .data-section');
+
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(a => {
+          a.classList.toggle('active', a.getAttribute('href') === `#${e.target.id}`);
+        });
+      }
+    });
+  }, { rootMargin: `-${58}px 0px -55% 0px`, threshold: 0 });
+
+  targets.forEach(t => obs.observe(t));
+})();
 </script>
 
 </body>
