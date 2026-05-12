@@ -60,6 +60,9 @@
     --line-soft:   #e4e7ed;
     --inactive:    #d8dde5;
     --inactive-stroke: #c4cad4;
+
+    --sidebar-w:   200px;
+    --topbar-h:    57px;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -559,6 +562,88 @@
   }
   .map-loading.hidden { display: none; }
 
+  /* SIDEBAR */
+  .sidenav {
+    position: fixed;
+    left: 0;
+    top: var(--topbar-h);
+    bottom: 0;
+    width: var(--sidebar-w);
+    background: var(--white);
+    border-right: 1px solid var(--line);
+    z-index: 40;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    padding: 28px 0 40px;
+  }
+  .sidenav-group {
+    margin-bottom: 8px;
+  }
+  .sidenav-group-label {
+    font-family: 'Doto', monospace; font-weight: 500;
+    font-size: 9px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 0 20px 8px;
+  }
+  .sidenav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 20px;
+    font-family: 'Coinbase Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--ink-dim);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    position: relative;
+    letter-spacing: 0.2px;
+  }
+  .sidenav-item:hover {
+    background: var(--blue-tint);
+    color: var(--ink);
+  }
+  .sidenav-item.active {
+    color: var(--blue);
+    font-weight: 500;
+    background: var(--blue-tint);
+  }
+  .sidenav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--blue);
+  }
+  .sidenav-pip {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--inactive);
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .sidenav-item.active .sidenav-pip { background: var(--blue); }
+  .sidenav-item:hover .sidenav-pip  { background: var(--blue-soft); }
+  .sidenav-divider {
+    height: 1px;
+    background: var(--line);
+    margin: 12px 20px;
+  }
+
+  /* LAYOUT */
+  .page-body {
+    margin-left: var(--sidebar-w);
+  }
+
+  @media (max-width: 900px) {
+    .sidenav { display: none; }
+    .page-body { margin-left: 0; }
+  }
+
   @media (max-width: 760px) {
     nav.topbar { padding: 14px 20px; }
     header.hero { padding: 50px 20px 24px; }
@@ -577,6 +662,46 @@
   <div class="brand"><span class="dot"></span>STABLECOIN.MAP</div>
   <div class="meta-pill">NETWORK <span>BASE</span> &nbsp;·&nbsp; v 1.0</div>
 </nav>
+
+<aside class="sidenav">
+
+  <div class="sidenav-group">
+    <div class="sidenav-group-label">Market</div>
+    <a class="sidenav-item active" href="#">
+      <span class="sidenav-pip"></span>Supply
+    </a>
+  </div>
+
+  <div class="sidenav-divider"></div>
+
+  <div class="sidenav-group">
+    <div class="sidenav-group-label">Flow</div>
+    <a class="sidenav-item" href="#">
+      <span class="sidenav-pip"></span>Transfer Volume
+    </a>
+    <a class="sidenav-item" href="#">
+      <span class="sidenav-pip"></span>Velocity
+    </a>
+    <a class="sidenav-item" href="#">
+      <span class="sidenav-pip"></span>Transactions
+    </a>
+  </div>
+
+  <div class="sidenav-divider"></div>
+
+  <div class="sidenav-group">
+    <div class="sidenav-group-label">Users</div>
+    <a class="sidenav-item" href="#">
+      <span class="sidenav-pip"></span>Active Wallets
+    </a>
+    <a class="sidenav-item" href="#">
+      <span class="sidenav-pip"></span>Dex Activity
+    </a>
+  </div>
+
+</aside>
+
+<div class="page-body">
 
 <header class="hero">
   <div class="section-label">// GLOBAL COVERAGE</div>
@@ -638,6 +763,13 @@
   </div>
 </section>
 
+<footer>
+  <div>© 2026 STABLECOIN.MAP · BUILT FOR <span>BASE</span></div>
+  <div>DATA · MANUAL CURATION · v1.0</div>
+</footer>
+
+</div><!-- /.page-body -->
+
 <!-- MODAL -->
 <div class="modal-backdrop" id="modal">
   <div class="modal">
@@ -667,11 +799,6 @@
     </div>
   </div>
 </div>
-
-<footer>
-  <div>© 2026 STABLECOIN.MAP · BUILT FOR <span>BASE</span></div>
-  <div>DATA · MANUAL CURATION · v1.0</div>
-</footer>
 
 <script>
 /* -------------------------------------------------------
