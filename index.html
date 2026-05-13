@@ -409,7 +409,9 @@
     border: 1px solid var(--line);
   }
   .supply-history-wrap .ds-chart-card { padding: 22px 24px; }
+  .supply-history-wrap .ds-chart-card + .ds-chart-card { border-top: 1px solid var(--line); }
   .supply-history-wrap .ds-chart-body { height: 320px; }
+  .supply-history-wrap .ds-chart-body.tall { height: 400px; }
 
   /* MODAL */
   .modal-backdrop {
@@ -933,6 +935,12 @@
       <div class="ds-chart-lbl">// HISTORICAL SUPPLY · STACKED BY REGION (USD M)</div>
       <div class="ds-chart-body">
         <canvas id="chart-supply-history"></canvas>
+      </div>
+    </div>
+    <div class="ds-chart-card">
+      <div class="ds-chart-lbl">// HISTORICAL SUPPLY · STACKED BY ISSUER (USD M)</div>
+      <div class="ds-chart-body tall">
+        <canvas id="chart-supply-symbol"></canvas>
       </div>
     </div>
   </div>
@@ -1813,6 +1821,13 @@ if (document.readyState === "loading") {
       ch.data.labels = labels;
       ch.data.datasets.forEach(ds => { ds.data = lastB(REGION_SUPPLY[ds.label]); });
     },
+    'chart-supply-symbol': (ch, buckets, labels) => {
+      const { lastB } = makeAgg(buckets);
+      ch.data.labels = labels;
+      ch.data.datasets.forEach(ds => {
+        ds.data = lastB(_mcap[ds.label] || Array(TOTAL).fill(0));
+      });
+    },
   };
 
   /* Refresh one chart using its current state */
@@ -2026,6 +2041,69 @@ if (document.readyState === "loading") {
     },
   });
 
+  /* ── Per-symbol supply chart (ordered by region for color coherence) ── */
+  const ALL_SYMS = [
+    // Europe – blue family (7)
+    'EURC','EURAU','VEUR','VCHF','VGBP','TGBP','TRYB',
+    // LATAM – green family (9)
+    'BRLA','BRZ','BRLY','MXNE','MXNB','ARST','ARGT','wARS','ARSX',
+    // SE Asia – cyan family (4)
+    'IDRX','THBT','MYRC','XSGD',
+    // Africa – amber family (4)
+    'CNGN','NGNC','ZARP','UGXC',
+    // Oceania – lime family (3)
+    'NZDD','AUDD','AUDF',
+    // N. America – purple (1)
+    'CADC',
+  ];
+  const SYM_COLORS = [
+    '#0000ff','#1d4ed8','#2563eb','#3b82f6','#60a5fa','#0284c7','#0ea5e9',
+    '#14532d','#15803d','#16a34a','#22c55e','#4ade80','#0f766e','#0d9488','#14b8a6','#2dd4bf',
+    '#164e63','#0e7490','#06b6d4','#22d3ee',
+    '#78350f','#b45309','#d97706','#fbbf24',
+    '#365314','#4d7c0f','#84cc16',
+    '#6d28d9',
+  ];
+
+  mk('chart-supply-symbol', {
+    type: 'bar',
+    data: {
+      labels: [],
+      datasets: ALL_SYMS.map((s, i) => ({
+        label: s, data: [],
+        backgroundColor: SYM_COLORS[i] + 'cc',
+        borderColor:     SYM_COLORS[i],
+        borderWidth: 0, borderRadius: 2,
+      })),
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            font: { family:"'Inter Tight',sans-serif", size: 8 },
+            boxWidth: 8, padding: 8, color: '#555',
+          },
+        },
+        tooltip: {
+          mode: 'index',
+          callbacks: { label: ctx => `${ctx.dataset.label}: $${ctx.parsed.y.toFixed(1)}M` },
+        },
+      },
+      scales: {
+        x: {
+          stacked: true, grid: { display: false },
+          ticks: { maxTicksLimit: 10, font: { family:"'Inter Tight',sans-serif", size: 9 }, color: '#999', maxRotation: 0 },
+        },
+        y: {
+          stacked: true, grid: { color: 'rgba(216,221,229,0.4)' },
+          ticks: { callback: v => `$${v}M`, font: { family:"'Inter Tight',sans-serif", size: 9 }, color: '#999' },
+        },
+      },
+    },
+  });
+
   /* Modal chart instance (destroyed & re-created on each open) */
   let _modalChart = null;
 
@@ -2109,7 +2187,7 @@ if (document.readyState === "loading") {
   /* ── Attach controls to all time-series charts ── */
   ['chart-peg','chart-volume','chart-txns','chart-velocity',
    'chart-dex','chart-corridors','chart-wallets','chart-gini',
-   'chart-supply-history']
+   'chart-supply-history','chart-supply-symbol']
     .forEach(id => addChartControls(id));
 
   /* ── Sidebar active state ── */
