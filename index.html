@@ -43,6 +43,7 @@
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="supply-data.js"></script>
 
 <style>
   :root {
@@ -1934,65 +1935,29 @@ if (document.readyState === "loading") {
   /* ══════════════════════════════════════════════════════
      MODAL — per-project historical market cap (730 days)
   ══════════════════════════════════════════════════════ */
-  const MCAP_SEEDS = {
-    EURC:80,  EURAU:5,  VEUR:3,
-    BRLA:30,  BRZ:15,   BRLY:3,
-    MXNE:8,   MXNB:2,
-    IDRX:5,
-    CNGN:3,   NGNC:1,
-    ZARP:2,
-    NZDD:4,
-    CADC:25,
-    TRYB:12,
-    VCHF:8,
-    VGBP:6,   TGBP:2,
-    ARST:3,   ARGT:5,   'wARS':2,  ARSX:1,
-    AUDD:10,  AUDF:3,
-    THBT:2,
-    MYRC:2,
-    UGXC:0.5,
-    XSGD:20,
-  };
-  const MCAP_MULTI = {
-    EURC:2.5, EURAU:2.0, VEUR:1.8,
-    BRLA:2.8, BRZ:2.0,  BRLY:1.8,
-    MXNE:2.5, MXNB:1.8,
-    IDRX:3.5,
-    CNGN:3.0, NGNC:2.5,
-    ZARP:2.2,
-    NZDD:1.5,
-    CADC:1.4,
-    TRYB:1.2,
-    VCHF:1.4,
-    VGBP:1.6, TGBP:1.5,
-    ARST:1.8, ARGT:2.2, 'wARS':1.5, ARSX:1.5,
-    AUDD:1.6, AUDF:1.8,
-    THBT:2.5,
-    MYRC:2.5,
-    UGXC:3.0,
-    XSGD:1.5,
-  };
-
+  /* ── Real supply data from Dune Analytics (supply-data.js)
+     EPOCH = May 12 2024, TOTAL = 730
+     Days 0-364  → pre-data (zero)
+     Days 365-729 → REAL_SUPPLY[sym][0..364] (May 12 2025 → May 11 2026) ── */
+  const SUPPLY_OFFSET = 365;
   const _mcap = {};
-  let _mcapPhase = 0;
-  Object.entries(MCAP_SEEDS).forEach(([sym, base]) => {
-    const multi  = MCAP_MULTI[sym] || 1.5;
-    const growth = base * (multi - 1);
-    _mcap[sym] = Array.from({length: TOTAL}, (_, i) => {
-      const g     = growth * (i / TOTAL);
-      const noise = base * 0.06 * Math.sin((i + _mcapPhase) * 0.05);
-      return Math.max(0.1, Math.round((base + g + noise) * 10) / 10);
+  if (typeof REAL_SUPPLY !== 'undefined') {
+    Object.entries(REAL_SUPPLY).forEach(([sym, arr]) => {
+      _mcap[sym] = Array.from({length: TOTAL}, (_, i) => {
+        if (i < SUPPLY_OFFSET) return 0;
+        const v = arr[i - SUPPLY_OFFSET];
+        return (v === null || v === undefined) ? 0 : v;
+      });
     });
-    _mcapPhase += 47;
-  });
+  }
   window.MCAP_DATA = _mcap;
 
   /* ── Regional supply aggregation (for supply history stacked bar) ── */
   const REGION_TOKENS = {
     'Europe':     ['EURC','EURAU','VEUR','VCHF','VGBP','TGBP','TRYB'],
-    'LATAM':      ['BRLA','BRZ','BRLY','MXNE','MXNB','ARST','ARGT','wARS','ARSX'],
+    'LATAM':      ['BRLA','BRZ','BRLY','MXNE','ARST','ARGT','wARS','ARSX','WCLP','WCOP','WPEN'],
     'SE Asia':    ['IDRX','THBT','MYRC','XSGD'],
-    'Africa':     ['CNGN','NGNC','ZARP','UGXC'],
+    'Africa':     ['CNGN','NGNC','ZARP','UGXC','nTZS'],
     'Oceania':    ['NZDD','AUDD','AUDF'],
     'N. America': ['CADC'],
   };
@@ -2045,23 +2010,29 @@ if (document.readyState === "loading") {
   const ALL_SYMS = [
     // Europe – blue family (7)
     'EURC','EURAU','VEUR','VCHF','VGBP','TGBP','TRYB',
-    // LATAM – green family (9)
-    'BRLA','BRZ','BRLY','MXNE','MXNB','ARST','ARGT','wARS','ARSX',
+    // LATAM – green family (12)
+    'BRLA','BRZ','BRLY','MXNE','ARST','ARGT','wARS','ARSX','WCLP','WCOP','WPEN',
     // SE Asia – cyan family (4)
     'IDRX','THBT','MYRC','XSGD',
-    // Africa – amber family (4)
-    'CNGN','NGNC','ZARP','UGXC',
+    // Africa – amber family (5)
+    'CNGN','NGNC','ZARP','UGXC','nTZS',
     // Oceania – lime family (3)
     'NZDD','AUDD','AUDF',
     // N. America – purple (1)
     'CADC',
   ];
   const SYM_COLORS = [
+    // Europe (7)
     '#0000ff','#1d4ed8','#2563eb','#3b82f6','#60a5fa','#0284c7','#0ea5e9',
-    '#14532d','#15803d','#16a34a','#22c55e','#4ade80','#0f766e','#0d9488','#14b8a6','#2dd4bf',
+    // LATAM (11)
+    '#14532d','#15803d','#16a34a','#22c55e','#4ade80','#0f766e','#0d9488','#14b8a6','#2dd4bf','#a7f3d0','#6ee7b7',
+    // SE Asia (4)
     '#164e63','#0e7490','#06b6d4','#22d3ee',
-    '#78350f','#b45309','#d97706','#fbbf24',
+    // Africa (5)
+    '#78350f','#b45309','#d97706','#fbbf24','#fde68a',
+    // Oceania (3)
     '#365314','#4d7c0f','#84cc16',
+    // N. America (1)
     '#6d28d9',
   ];
 
@@ -2189,6 +2160,15 @@ if (document.readyState === "loading") {
    'chart-dex','chart-corridors','chart-wallets','chart-gini',
    'chart-supply-history','chart-supply-symbol']
     .forEach(id => addChartControls(id));
+
+  /* Supply charts default to the real-data window (day 365 onward) */
+  ['chart-supply-history','chart-supply-symbol'].forEach(id => {
+    const st = states[id];
+    if (!st) return;
+    st.start = SUPPLY_OFFSET;
+    st.els.rangeS.value = SUPPLY_OFFSET;
+    refreshChart(id);
+  });
 
   /* ── Sidebar active state ── */
   const navLinks = document.querySelectorAll('.sidenav-item[href^="#"]');
