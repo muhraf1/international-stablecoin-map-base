@@ -403,6 +403,14 @@
   }
   .region-cell:hover::after { color: var(--blue); transform: translateX(3px); }
 
+  /* SUPPLY HISTORY CHART */
+  .supply-history-wrap {
+    margin-top: 32px;
+    border: 1px solid var(--line);
+  }
+  .supply-history-wrap .ds-chart-card { padding: 22px 24px; }
+  .supply-history-wrap .ds-chart-body { height: 320px; }
+
   /* MODAL */
   .modal-backdrop {
     position: fixed; inset: 0;
@@ -918,6 +926,15 @@
   <div class="regions">
     <h3>// REGISTRY · 21 REGIONS</h3>
     <div class="region-grid" id="regionGrid"></div>
+  </div>
+
+  <div class="supply-history-wrap">
+    <div class="ds-chart-card">
+      <div class="ds-chart-lbl">// HISTORICAL SUPPLY · STACKED BY REGION (USD M)</div>
+      <div class="ds-chart-body">
+        <canvas id="chart-supply-history"></canvas>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1791,6 +1808,11 @@ if (document.readyState === "loading") {
       ch.data.labels = labels;
       ch.data.datasets.forEach((ds, i) => { ds.data = avgB(GINI_DATA[TOK[i]], 3); });
     },
+    'chart-supply-history': (ch, buckets, labels) => {
+      const { lastB } = makeAgg(buckets);
+      ch.data.labels = labels;
+      ch.data.datasets.forEach(ds => { ds.data = lastB(REGION_SUPPLY[ds.label]); });
+    },
   };
 
   /* Refresh one chart using its current state */
@@ -1950,6 +1972,60 @@ if (document.readyState === "loading") {
   });
   window.MCAP_DATA = _mcap;
 
+  /* ── Regional supply aggregation (for supply history stacked bar) ── */
+  const REGION_TOKENS = {
+    'Europe':     ['EURC','EURAU','VEUR','VCHF','VGBP','TGBP','TRYB'],
+    'LATAM':      ['BRLA','BRZ','BRLY','MXNE','MXNB','ARST','ARGT','wARS','ARSX'],
+    'SE Asia':    ['IDRX','THBT','MYRC','XSGD'],
+    'Africa':     ['CNGN','NGNC','ZARP','UGXC'],
+    'Oceania':    ['NZDD','AUDD','AUDF'],
+    'N. America': ['CADC'],
+  };
+  const REGION_COLORS = ['#0000ff','#3b82f6','#60a5fa','#f59e0b','#10b981','#8b5cf6'];
+  const REGION_NAMES  = Object.keys(REGION_TOKENS);
+  const REGION_SUPPLY = {};
+  REGION_NAMES.forEach(r => {
+    REGION_SUPPLY[r] = Array.from({length: TOTAL}, (_, i) =>
+      REGION_TOKENS[r].reduce((s, sym) => s + (_mcap[sym] ? _mcap[sym][i] : 0), 0)
+    );
+  });
+
+  mk('chart-supply-history', {
+    type: 'bar',
+    data: {
+      labels: [],
+      datasets: REGION_NAMES.map((r, i) => ({
+        label: r, data: [],
+        backgroundColor: REGION_COLORS[i] + 'b3',
+        borderColor:     REGION_COLORS[i],
+        borderWidth: 0, borderRadius: 2,
+      })),
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { font: { family:"'Inter Tight',sans-serif", size: 9 }, boxWidth: 10, padding: 14, color: '#666' },
+        },
+        tooltip: {
+          mode: 'index',
+          callbacks: { label: ctx => `${ctx.dataset.label}: $${ctx.parsed.y.toFixed(1)}M` },
+        },
+      },
+      scales: {
+        x: {
+          stacked: true, grid: { display: false },
+          ticks: { maxTicksLimit: 10, font: { family:"'Inter Tight',sans-serif", size: 9 }, color: '#999', maxRotation: 0 },
+        },
+        y: {
+          stacked: true, grid: { color: 'rgba(216,221,229,0.4)' },
+          ticks: { callback: v => `$${v}M`, font: { family:"'Inter Tight',sans-serif", size: 9 }, color: '#999' },
+        },
+      },
+    },
+  });
+
   /* Modal chart instance (destroyed & re-created on each open) */
   let _modalChart = null;
 
@@ -2032,7 +2108,8 @@ if (document.readyState === "loading") {
 
   /* ── Attach controls to all time-series charts ── */
   ['chart-peg','chart-volume','chart-txns','chart-velocity',
-   'chart-dex','chart-corridors','chart-wallets','chart-gini']
+   'chart-dex','chart-corridors','chart-wallets','chart-gini',
+   'chart-supply-history']
     .forEach(id => addChartControls(id));
 
   /* ── Sidebar active state ── */
