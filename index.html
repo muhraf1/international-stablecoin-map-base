@@ -45,6 +45,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="supply-data.js"></script>
 <script src="price-data.js"></script>
+<script src="fx-data.js"></script>
 
 <style>
   :root {
@@ -657,6 +658,12 @@
   }
   .ds-chart-body { position: relative; height: 280px; }
   .ds-chart-body.sm { height: 210px; }
+  .ds-chart-note {
+    margin-top: 12px; font-size: 10px; color: var(--ink-dim);
+    line-height: 1.6; letter-spacing: 0.3px;
+  }
+  .ds-chart-note a { color: var(--blue); text-decoration: underline; }
+  .ds-chart-note code { font-family: monospace; font-size: 9.5px; }
   @media (max-width: 760px) {
     .data-section { padding: 40px 20px 24px; }
     .ds-charts.c2 { grid-template-columns: 1fr; }
@@ -966,7 +973,7 @@
   <div class="ds-header">
     <p class="ds-cluster">// ISSUANCE</p>
     <h2 class="ds-title">Peg Stability</h2>
-    <p class="ds-desc">Price deviation of each stablecoin from its target fiat peg. A healthy token stays within ±0.5% — the onchain equivalent of a central bank's FX intervention band and the primary trust signal for cross-border settlement.</p>
+    <p class="ds-desc">Daily ratio of each stablecoin's DEX price to its FX fair-value reference. Ratio of 1.000 signals a perfect peg. DEX prices from <a href="https://dune.com" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:underline">Dune Analytics</a> <code style="font-size:11px">dex.trades</code>; FX reference from Dune's <code style="font-size:11px">prices.fx_exchange_rates</code> table.</p>
   </div>
   <div class="ds-kpis">
     <div class="ds-kpi"><div class="ds-kpi-label">MAX DEVIATION (30D)</div><div class="ds-kpi-val" id="pegMaxDev">—<span class="u">%</span></div><div class="ds-kpi-sub flat" id="pegMaxDevSub">LOADING</div></div>
@@ -976,8 +983,9 @@
   </div>
   <div class="ds-charts c1">
     <div class="ds-chart-card">
-      <div class="ds-chart-lbl">// DEX PRICE ÷ FAIR VALUE PEG · EURC CADC XSGD TRYB VCHF BRZ</div>
+      <div class="ds-chart-lbl">// DEX PRICE ÷ FX FAIR VALUE · TOP 10 BY BASE DEX VOLUME</div>
       <div class="ds-chart-body"><canvas id="chart-peg"></canvas></div>
+      <p class="ds-chart-note">Source: <a href="https://dune.com" target="_blank" rel="noopener">Dune Analytics</a> · Base chain · Peg ratio = <code>dex.trades</code> price ÷ <code>prices.fx_exchange_rates</code> · Ranked by DEX volume · Tokens with no Base DEX trades excluded</p>
     </div>
   </div>
 </section>
@@ -1602,13 +1610,39 @@ if (document.readyState === "loading") {
   const TCOL = [C.b0, C.b1, C.b2, C.b3, C.b6, C.b7];
 
   const PRICE_OFFSET = 367; // real peg data starts day 367 (2025-05-14)
-  const PEG_TOKS = ['EURC','CADC','XSGD','TRYB','VCHF','BRZ'];
+  const PEG_COLOR_MAP = {
+    CADC:'#6d28d9', XSGD:'#22d3ee', AUDD:'#4d7c0f', VEUR:'#2563eb', VCHF:'#3b82f6',
+    TRYB:'#0ea5e9', ZARP:'#d97706', EURAU:'#1d4ed8', CNGN:'#78350f', TGBP:'#0284c7',
+    MYRC:'#06b6d4', BRLA:'#14532d', VGBP:'#60a5fa', MXNE:'#22c55e',
+    EURC:'#0000ff', BRZ:'#15803d', IDRX:'#164e63', NZDD:'#365314', THBT:'#0e7490',
+  };
+  // Token → underlying fiat currency (for FX_RATES lookup)
+  const TOK_CUR = {
+    AUDD:'AUD', BRLA:'BRL', CADC:'CAD', CNGN:'NGN', EURAU:'EUR',
+    MXNE:'MXN', MYRC:'MYR', NZDD:'NZD', TGBP:'GBP', THBT:'THB',
+    TRYB:'TRY', VCHF:'CHF', VEUR:'EUR', VGBP:'GBP', WARS:'ARS',
+    XSGD:'SGD', YTRYB:'TRY', ZARP:'ZAR',
+  };
+  // Excluded: systematic >7% deviation or near-zero DEX volume
+  const PEG_EXCL = new Set(['VGBP','MXNE','NZDD','THBT']);
+  const PEG_MAX  = 10;
+  // Ranked by DEX trading volume (from Dune dex.trades)
+  const PEG_VOL_RANK = ['CADC','XSGD','AUDD','VEUR','VCHF','TRYB','ZARP','EURAU','CNGN','TGBP','MYRC','BRLA'];
+  const hasDex = typeof DEX_PRICES !== 'undefined';
+  const hasFx  = typeof FX_RATES  !== 'undefined';
+  const PEG_TOKS = (hasDex
+    ? PEG_VOL_RANK.filter(s => !PEG_EXCL.has(s) && DEX_PRICES[s])
+    : ['CADC','XSGD','TRYB','VCHF']).slice(0, PEG_MAX);
+  // Peg ratio computed live: DEX_PRICES[sym][i] / FX_RATES[currency][i]
   const PEG_DATA = {};
   PEG_TOKS.forEach(sym => {
+    const cur = TOK_CUR[sym];
     PEG_DATA[sym] = Array.from({length: TOTAL}, (_, i) => {
-      if (typeof REAL_PEG === 'undefined' || !REAL_PEG[sym]) return 1.0;
-      const v = REAL_PEG[sym][i];
-      return (v === null || v === undefined) ? 1.0 : v;
+      if (!hasDex || !hasFx) return 1.0;
+      const dex = DEX_PRICES[sym]?.[i];
+      const fx  = FX_RATES[cur]?.[i];
+      if (dex == null || fx == null || fx === 0) return 1.0;
+      return Math.round((dex / fx) * 1e6) / 1e6;
     });
   });
   const VOL_DATA = {
@@ -1651,8 +1685,8 @@ if (document.readyState === "loading") {
 
   /* ── Initialize all charts (time-series with empty data) ── */
   mk('chart-peg', {
-    type:'line', data:{ labels:[], datasets: PEG_TOKS.map((n,i)=>({
-      label:n, data:[], borderColor:TCOL[i]||C.gr, backgroundColor:'transparent',
+    type:'line', data:{ labels:[], datasets: PEG_TOKS.map((n)=>({
+      label:n, data:[], borderColor:PEG_COLOR_MAP[n]||C.gr, backgroundColor:'transparent',
       borderWidth:1.5, pointRadius:0, tension:0.3 })) },
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{
@@ -1673,7 +1707,7 @@ if (document.readyState === "loading") {
         annotation: { annotations: { pegLine: { type:'line', yMin:1, yMax:1, borderColor:'rgba(0,0,255,0.25)', borderWidth:1, borderDash:[4,4] } } },
       },
       scales:{
-        y:{ min:0.85, max:1.05, grid:{color:'rgba(216,221,229,0.4)'},
+        y:{ min:0.87, max:1.06, grid:{color:'rgba(216,221,229,0.4)'},
             ticks:{ callback: v => v === 1 ? '— PEG' : (((v-1)*100).toFixed(1)+'%'), font:{family:"'Inter Tight',sans-serif",size:9}, color:'#999' }},
         x:{ grid:{display:false}, ticks:{maxTicksLimit:8, font:{family:"'Inter Tight',sans-serif",size:9}, color:'#999'} }
       } }
@@ -2268,17 +2302,33 @@ if (document.readyState === "loading") {
     refreshChart('chart-peg');
   }
 
-  /* Populate peg KPI cards from real computed values */
-  if (typeof PEG_KPIS !== 'undefined') {
-    const K = PEG_KPIS;
+  /* Populate peg KPI cards — computed dynamically from full PEG_TOKS set */
+  {
     const fmtPct = v => v.toFixed(2);
-    document.getElementById('pegMaxDev').innerHTML     = fmtPct(K.maxDev30) + '<span class="u">%</span>';
-    document.getElementById('pegMaxDevSub').textContent = K.maxDev30 < 0.5 ? 'WITHIN BAND' : K.maxDev30 < 2 ? 'MODERATE' : 'ELEVATED';
-    document.getElementById('pegAvgDev').innerHTML     = fmtPct(K.avgDev) + '<span class="u">%</span>';
-    document.getElementById('pegAtPeg').innerHTML      = K.atPegCount + '<span class="u">/ ' + K.atPegTotal + '</span>';
-    document.getElementById('pegAtPegSub').textContent = Math.round(K.atPegCount / K.atPegTotal * 100) + '%';
-    document.getElementById('pegWeakestSym').textContent = K.weakestSym;
-    document.getElementById('pegWeakestDev').textContent  = '−' + fmtPct(K.weakestDev) + '%';
+    const last30 = TOTAL - 30;
+    let maxDev30 = 0, totalDev = 0, devCount = 0, weakestSym = '—', weakestDev = 0, atPegCount = 0;
+    PEG_TOKS.forEach(sym => {
+      const arr = PEG_DATA[sym];
+      let symMaxDev = 0;
+      for (let i = PRICE_OFFSET; i < TOTAL; i++) {
+        if (!hasDex || DEX_PRICES[sym]?.[i] == null) continue;
+        const d = Math.abs(arr[i] - 1) * 100;
+        totalDev += d; devCount++;
+        if (d > symMaxDev) symMaxDev = d;
+        if (i >= last30 && d > maxDev30) maxDev30 = d;
+      }
+      if (symMaxDev > weakestDev) { weakestDev = symMaxDev; weakestSym = sym; }
+      if (symMaxDev <= 1.0) atPegCount++;
+    });
+    const avgDev = devCount > 0 ? totalDev / devCount : 0;
+    const atPegTotal = PEG_TOKS.length;
+    document.getElementById('pegMaxDev').innerHTML      = fmtPct(maxDev30) + '<span class="u">%</span>';
+    document.getElementById('pegMaxDevSub').textContent = maxDev30 < 0.5 ? 'WITHIN BAND' : maxDev30 < 2 ? 'MODERATE' : 'ELEVATED';
+    document.getElementById('pegAvgDev').innerHTML      = fmtPct(avgDev) + '<span class="u">%</span>';
+    document.getElementById('pegAtPeg').innerHTML       = atPegCount + '<span class="u">/ ' + atPegTotal + '</span>';
+    document.getElementById('pegAtPegSub').textContent  = Math.round(atPegCount / atPegTotal * 100) + '%';
+    document.getElementById('pegWeakestSym').textContent = weakestSym;
+    document.getElementById('pegWeakestDev').textContent = '−' + fmtPct(weakestDev) + '%';
   }
 
   /* ── Sidebar active state ── */
