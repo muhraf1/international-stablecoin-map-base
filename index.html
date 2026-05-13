@@ -900,7 +900,7 @@
   </div>
   <div class="stat">
     <div class="stat-label">PROJECTS TRACKED</div>
-    <div class="stat-value">35<span class="unit">TOKENS</span></div>
+    <div class="stat-value"><span id="tokenCountVal">—</span><span class="unit">TOKENS</span></div>
   </div>
   <div class="stat">
     <div class="stat-label">NETWORK</div>
@@ -1557,6 +1557,9 @@ if (document.readyState === "loading") {
   Chart.defaults.plugins.tooltip.borderColor         = '#d8dde5';
   Chart.defaults.plugins.tooltip.borderWidth         = 1;
   Chart.defaults.plugins.tooltip.padding             = 10;
+  Chart.defaults.plugins.tooltip.footerColor         = '#06061f';
+  Chart.defaults.plugins.tooltip.footerFont          = { family:"'Inter Tight',sans-serif", weight:'700', size:11 };
+  Chart.defaults.plugins.tooltip.footerMarginTop     = 8;
 
   /* ── Constants ── */
   const TOTAL = 730;
@@ -1860,7 +1863,15 @@ if (document.readyState === "loading") {
       const { lastB } = makeAgg(buckets);
       ch.data.labels = labels;
       ch.data.datasets.forEach(ds => {
-        ds.data = lastB(_mcap[ds.label] || Array(TOTAL).fill(0));
+        if (ds.label === 'Others') {
+          const combined = Array(buckets.length).fill(0);
+          (SMALL_SYMS || []).forEach(s => {
+            lastB(_mcap[s] || Array(TOTAL).fill(0)).forEach((v, i) => { combined[i] += v; });
+          });
+          ds.data = combined.map(v => Math.round(v * 10000) / 10000);
+        } else {
+          ds.data = lastB(_mcap[ds.label] || Array(TOTAL).fill(0));
+        }
       });
     },
   };
@@ -2004,6 +2015,23 @@ if (document.readyState === "loading") {
     );
   });
 
+  function supplyTooltipCallbacks() {
+    return {
+      label: ctx => {
+        const v = ctx.parsed.y;
+        if (!v || v < 0.0001) return null;
+        const fmt = v >= 1 ? `$${v.toFixed(2)}M` : `$${Math.round(v * 1000)}K`;
+        return `${ctx.dataset.label}: ${fmt}`;
+      },
+      footer: items => {
+        const total = items.reduce((s, i) => s + (i.parsed.y || 0), 0);
+        if (!total) return '';
+        const fmt = total >= 1 ? `$${total.toFixed(2)}M` : `$${Math.round(total * 1000)}K`;
+        return `Total: ${fmt}`;
+      },
+    };
+  }
+
   mk('chart-supply-history', {
     type: 'bar',
     data: {
@@ -2022,10 +2050,7 @@ if (document.readyState === "loading") {
           position: 'bottom',
           labels: { font: { family:"'Inter Tight',sans-serif", size: 9 }, boxWidth: 10, padding: 14, color: '#666' },
         },
-        tooltip: {
-          mode: 'index',
-          callbacks: { label: ctx => `${ctx.dataset.label}: $${ctx.parsed.y.toFixed(1)}M` },
-        },
+        tooltip: { mode: 'index', callbacks: supplyTooltipCallbacks() },
       },
       scales: {
         x: {
@@ -2070,31 +2095,37 @@ if (document.readyState === "loading") {
     return vb - va;
   });
 
+  /* Tokens with latest supply < $0.1M are grouped into "Others" */
+  const OTHERS_THRESHOLD = 0.1;
+  const MAIN_SYMS  = ALL_SYMS.filter(s => (_mcap[s]?.[TOTAL - 1] || 0) >= OTHERS_THRESHOLD);
+  const SMALL_SYMS = ALL_SYMS.filter(s => (_mcap[s]?.[TOTAL - 1] || 0) <  OTHERS_THRESHOLD);
+
+  /* Update token count stat */
+  const tokEl = document.getElementById('tokenCountVal');
+  if (tokEl) tokEl.textContent = ALL_SYMS.length;
+
   mk('chart-supply-symbol', {
     type: 'bar',
     data: {
       labels: [],
-      datasets: ALL_SYMS.map(s => ({
-        label: s, data: [],
-        backgroundColor: (SYM_COLOR_MAP[s] || '#999') + 'cc',
-        borderColor:     SYM_COLOR_MAP[s] || '#999',
-        borderWidth: 0, borderRadius: 2,
-      })),
+      datasets: [
+        ...MAIN_SYMS.map(s => ({
+          label: s, data: [],
+          backgroundColor: (SYM_COLOR_MAP[s] || '#999') + 'cc',
+          borderColor:     SYM_COLOR_MAP[s] || '#999',
+          borderWidth: 0, borderRadius: 2,
+        })),
+        { label: 'Others', data: [], backgroundColor: '#94a3b8b3', borderColor: '#94a3b8', borderWidth: 0, borderRadius: 2 },
+      ],
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: {
         legend: {
           position: 'bottom',
-          labels: {
-            font: { family:"'Inter Tight',sans-serif", size: 8 },
-            boxWidth: 8, padding: 8, color: '#555',
-          },
+          labels: { font: { family:"'Inter Tight',sans-serif", size: 9 }, boxWidth: 10, padding: 12, color: '#555' },
         },
-        tooltip: {
-          mode: 'index',
-          callbacks: { label: ctx => `${ctx.dataset.label}: $${ctx.parsed.y.toFixed(1)}M` },
-        },
+        tooltip: { mode: 'index', callbacks: supplyTooltipCallbacks() },
       },
       scales: {
         x: {
