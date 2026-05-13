@@ -385,6 +385,19 @@
     margin-bottom: 8px;
     text-transform: uppercase;
     transition: color 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-right: 22px;
+  }
+  .region-supply {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--blue);
+    letter-spacing: 0;
+    text-transform: none;
+    flex-shrink: 0;
+    margin-left: 8px;
   }
   .region-cell .region-tokens {
     font-family: 'Inter Tight', sans-serif; font-weight: 600;
@@ -895,7 +908,7 @@
   </div>
   <div class="stat">
     <div class="stat-label">AGGREGATE MCAP</div>
-    <div class="stat-value">—<span class="unit">PENDING</span></div>
+    <div class="stat-value" id="aggMcapVal">—<span class="unit">LOADING</span></div>
   </div>
 </section>
 
@@ -1256,18 +1269,39 @@ const gridEntries = [
   ...Object.entries(DATA).map(([id, info]) => ({ id: parseInt(id), info })),
   { id: "EU", info: EU_INFO },
 ];
+
+/* Compute current supply per country from real data */
+function countrySupplyStr(symbols) {
+  if (typeof REAL_SUPPLY === 'undefined') return '';
+  const last = REAL_SUPPLY_DATES ? REAL_SUPPLY_DATES.length - 1 : 364;
+  const total = symbols.reduce((s, sym) => {
+    const arr = REAL_SUPPLY[sym];
+    const v = arr && arr[last] != null ? arr[last] : 0;
+    return s + v;
+  }, 0);
+  if (total <= 0.0001) return '';
+  if (total >= 1)      return '$' + total.toFixed(2) + 'M';
+  if (total >= 0.001)  return '$' + Math.round(total * 1000) + 'K';
+  return '< $1K';
+}
+
 gridEntries
   .sort((a, b) => a.info.country.localeCompare(b.info.country))
   .forEach(({ info }) => {
     const cell = document.createElement("div");
     cell.className = "region-cell";
     cell.addEventListener("click", () => openModal(info));
+    const supply = countrySupplyStr(info.symbols);
     cell.innerHTML = `
-      <div class="region-name">${info.country}</div>
+      <div class="region-name">${info.country}${supply ? `<span class="region-supply">${supply}</span>` : ''}</div>
       <div class="region-tokens">${info.symbols.map(s => `<span class="tok">${s}</span>`).join(" · ")}</div>
     `;
     grid.appendChild(cell);
   });
+
+/* Update registry count dynamically */
+const registryH3 = document.querySelector('.regions h3');
+if (registryH3) registryH3.textContent = `// REGISTRY · ${gridEntries.length} REGIONS`;
 
 /* -------------------------------------------------------
    MODAL
@@ -2006,44 +2040,44 @@ if (document.readyState === "loading") {
     },
   });
 
-  /* ── Per-symbol supply chart (ordered by region for color coherence) ── */
-  const ALL_SYMS = [
-    // Europe – blue family (7)
-    'EURC','EURAU','VEUR','VCHF','VGBP','TGBP','TRYB',
-    // LATAM – green family (12)
-    'BRLA','BRZ','BRLY','MXNE','ARST','ARGT','wARS','ARSX','WCLP','WCOP','WPEN',
-    // SE Asia – cyan family (4)
-    'IDRX','THBT','MYRC','XSGD',
-    // Africa – amber family (5)
-    'CNGN','NGNC','ZARP','UGXC','nTZS',
-    // Oceania – lime family (3)
-    'NZDD','AUDD','AUDF',
-    // N. America – purple (1)
-    'CADC',
-  ];
-  const SYM_COLORS = [
-    // Europe (7)
-    '#0000ff','#1d4ed8','#2563eb','#3b82f6','#60a5fa','#0284c7','#0ea5e9',
-    // LATAM (11)
-    '#14532d','#15803d','#16a34a','#22c55e','#4ade80','#0f766e','#0d9488','#14b8a6','#2dd4bf','#a7f3d0','#6ee7b7',
-    // SE Asia (4)
-    '#164e63','#0e7490','#06b6d4','#22d3ee',
-    // Africa (5)
-    '#78350f','#b45309','#d97706','#fbbf24','#fde68a',
-    // Oceania (3)
-    '#365314','#4d7c0f','#84cc16',
-    // N. America (1)
-    '#6d28d9',
-  ];
+  /* ── Aggregate MCAP stat ── */
+  (function() {
+    const el = document.getElementById('aggMcapVal');
+    if (!el || !Object.keys(_mcap).length) return;
+    const total = Object.values(_mcap).reduce((s, arr) => s + (arr[TOTAL - 1] || 0), 0);
+    const fmt   = total >= 1000 ? '$' + (total / 1000).toFixed(2) + 'B'
+                                : '$' + total.toFixed(1) + 'M';
+    el.innerHTML = fmt + '<span class="unit">USD</span>';
+  })();
+
+  /* ── Per-symbol supply chart ── */
+  /* Fixed per-token region colors (stable regardless of sort) */
+  const SYM_COLOR_MAP = {
+    EURC:'#0000ff', EURAU:'#1d4ed8', VEUR:'#2563eb', VCHF:'#3b82f6',
+    VGBP:'#60a5fa', TGBP:'#0284c7', TRYB:'#0ea5e9',
+    BRLA:'#14532d', BRZ:'#15803d',  BRLY:'#16a34a',  MXNE:'#22c55e',
+    ARST:'#4ade80', ARGT:'#0f766e', 'wARS':'#0d9488', ARSX:'#14b8a6',
+    WCLP:'#2dd4bf', WCOP:'#a7f3d0', WPEN:'#6ee7b7',
+    IDRX:'#164e63', THBT:'#0e7490', MYRC:'#06b6d4',  XSGD:'#22d3ee',
+    CNGN:'#78350f', NGNC:'#b45309', ZARP:'#d97706',  UGXC:'#fbbf24', 'nTZS':'#fde68a',
+    NZDD:'#365314', AUDD:'#4d7c0f', AUDF:'#84cc16',
+    CADC:'#6d28d9',
+  };
+  /* Sort symbols by latest supply descending so legend = largest → smallest */
+  const ALL_SYMS = Object.keys(SYM_COLOR_MAP).sort((a, b) => {
+    const va = _mcap[a] ? (_mcap[a][TOTAL - 1] || 0) : 0;
+    const vb = _mcap[b] ? (_mcap[b][TOTAL - 1] || 0) : 0;
+    return vb - va;
+  });
 
   mk('chart-supply-symbol', {
     type: 'bar',
     data: {
       labels: [],
-      datasets: ALL_SYMS.map((s, i) => ({
+      datasets: ALL_SYMS.map(s => ({
         label: s, data: [],
-        backgroundColor: SYM_COLORS[i] + 'cc',
-        borderColor:     SYM_COLORS[i],
+        backgroundColor: (SYM_COLOR_MAP[s] || '#999') + 'cc',
+        borderColor:     SYM_COLOR_MAP[s] || '#999',
         borderWidth: 0, borderRadius: 2,
       })),
     },
