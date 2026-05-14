@@ -46,6 +46,10 @@
 <script src="supply-data.js"></script>
 <script src="price-data.js"></script>
 <script src="fx-data.js"></script>
+<script src="volume-data.js"></script>
+<script src="txn-data.js"></script>
+<script src="holders-data.js"></script>
+<script src="dex-data.js"></script>
 
 <style>
   :root {
@@ -844,13 +848,117 @@
     footer { padding: 20px; }
     .modal-country { font-size: 30px; }
   }
+
+  /* CHART CARD FOOTER */
+  .ds-chart-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 7px 0 0;
+    border-top: 1px solid var(--line-soft);
+    margin-top: 10px;
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .ds-chart-footer svg { width: 9px; height: 9px; flex-shrink: 0; fill: #000000; }
+  .ds-chart-footer .cft-handle { color: #000000; font-weight: 700; letter-spacing: 1px; }
+  .ds-chart-footer .cft-right { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+  .ds-chart-footer .cft-source {
+    color: var(--ink-faint);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .ds-chart-footer .cft-source:hover { color: var(--blue); text-decoration: underline; }
+
+  /* CHART DOWNLOAD BUTTON */
+  .chart-dl-btn {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink-faint);
+    width: 22px; height: 22px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: border-color 0.12s, color 0.12s, background 0.12s;
+    border-radius: 2px;
+  }
+  .chart-dl-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-tint); }
+  .ds-chart-lbl { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .ds-chart-lbl-text { flex: 1; }
+
+  /* TALL CHART (for horizontal bar with many items) */
+  .ds-chart-body.xxl { height: 560px; }
+
+  /* X / TWITTER HANDLE */
+  .x-credit {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'Inter Tight', sans-serif; font-weight: 700;
+    font-size: 11px; letter-spacing: 1.5px;
+    color: #000000;
+    text-decoration: none;
+  }
+  .x-credit:hover { color: #333333; }
+  .x-credit svg { width: 13px; height: 13px; flex-shrink: 0; fill: #000000; }
+  .x-credit-nav {
+    display: flex; align-items: center; gap: 5px;
+    font-family: 'Inter Tight', sans-serif; font-weight: 700;
+    font-size: 11px; letter-spacing: 1.5px;
+    color: #000000;
+    text-decoration: none;
+    border: 1px solid var(--ink);
+    padding: 4px 10px;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .x-credit-nav:hover { border-color: #333; color: #333; }
+  .x-credit-nav svg { width: 11px; height: 11px; flex-shrink: 0; fill: #000000; }
+
+  /* COMING SOON */
+  .coming-soon-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 60px 40px;
+    border: 1px dashed var(--line);
+    background: var(--white);
+  }
+  .coming-soon-badge {
+    display: inline-block;
+    padding: 6px 18px;
+    background: var(--blue-tint);
+    border: 1px solid var(--blue);
+    color: var(--blue);
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  .coming-soon-desc {
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 12px;
+    color: var(--ink-faint);
+    letter-spacing: 0.5px;
+  }
 </style>
 </head>
 <body>
 
 <nav class="topbar">
   <div class="brand"><span class="dot"></span><img src="base-logo.svg" class="base-logo-nav" alt="Base">STABLECOIN.MAP</div>
-  <div class="meta-pill">NETWORK &nbsp;<img src="base-logo.svg" class="base-logo-nav" alt="Base">&nbsp;&nbsp;·&nbsp; v 1.0</div>
+  <div style="display:flex;align-items:center;gap:20px;">
+    <a class="x-credit-nav" href="https://x.com/_muhraf_" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.813-8.126-10.687h7.116l4.26 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      @_MUHRAF_
+    </a>
+    <div class="meta-pill">NETWORK &nbsp;<img src="base-logo.svg" class="base-logo-nav" alt="Base">&nbsp;&nbsp;·&nbsp; v 1.0</div>
+  </div>
 </nav>
 
 <aside class="sidenav">
@@ -868,7 +976,6 @@
     <a class="sidenav-item" href="#transfer-volume"><span class="sidenav-pip"></span>Transfer Volume</a>
     <a class="sidenav-item" href="#transactions"><span class="sidenav-pip"></span>Transactions</a>
     <a class="sidenav-item" href="#velocity"><span class="sidenav-pip"></span>Velocity</a>
-    <a class="sidenav-item" href="#bridge-volume"><span class="sidenav-pip"></span>Bridge Volume</a>
   </div>
 
   <div class="sidenav-divider"></div>
@@ -876,7 +983,6 @@
   <div class="sidenav-group">
     <div class="sidenav-group-label">Market</div>
     <a class="sidenav-item" href="#dex-activity"><span class="sidenav-pip"></span>DEX Activity</a>
-    <a class="sidenav-item" href="#fx-corridors"><span class="sidenav-pip"></span>FX Corridors</a>
     <a class="sidenav-item" href="#liquidity"><span class="sidenav-pip"></span>Liquidity</a>
   </div>
 
@@ -895,7 +1001,7 @@
 
 <header class="hero" id="supply">
   <div class="section-label">// GLOBAL COVERAGE</div>
-  <h1 class="hero-title">International stablecoins,<br/><em>natively on Base.</em></h1>
+  <h1 class="hero-title">International stablecoins,<br/><em>on Base.</em></h1>
   <p class="lede">
     A live atlas of <strong>non-USD stablecoin issuance</strong> deployed on the Base network — spanning fiat-backed tokens across <strong>21 regions</strong> in APAC, LATAM, Europe, and Africa. Click any highlighted territory to inspect the projects issued there.
   </p>
@@ -973,7 +1079,7 @@
   <div class="ds-header">
     <p class="ds-cluster">// ISSUANCE</p>
     <h2 class="ds-title">Peg Stability</h2>
-    <p class="ds-desc">Daily ratio of each stablecoin's DEX price to its FX fair-value reference. Ratio of 1.000 signals a perfect peg. DEX prices from <a href="https://dune.com" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:underline">Dune Analytics</a> <code style="font-size:11px">dex.trades</code>; FX reference from Dune's <code style="font-size:11px">prices.fx_exchange_rates</code> table.</p>
+    <p class="ds-desc">Daily ratio of each stablecoin's on-Base price to its FX fair-value reference. Ratio of 1.000 signals a perfect peg. Base chain prices sourced from <a href="https://dune.com" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:underline">Dune Analytics</a> — <code style="font-size:11px">dex.trades</code> for tokens with active DEX pools, CoinPaprika aggregated price for others. FX reference from Dune's <code style="font-size:11px">prices.fx_exchange_rates</code> table.</p>
   </div>
   <div class="ds-kpis">
     <div class="ds-kpi"><div class="ds-kpi-label">MAX DEVIATION (30D)</div><div class="ds-kpi-val" id="pegMaxDev">—<span class="u">%</span></div><div class="ds-kpi-sub flat" id="pegMaxDevSub">LOADING</div></div>
@@ -983,9 +1089,9 @@
   </div>
   <div class="ds-charts c1">
     <div class="ds-chart-card">
-      <div class="ds-chart-lbl">// DEX PRICE ÷ FX FAIR VALUE · TOP 10 BY BASE DEX VOLUME</div>
+      <div class="ds-chart-lbl">// DEX PRICE ÷ FX FAIR VALUE · ALL TOKENS WITH BASE DEX DATA</div>
       <div class="ds-chart-body"><canvas id="chart-peg"></canvas></div>
-      <p class="ds-chart-note">Source: <a href="https://dune.com" target="_blank" rel="noopener">Dune Analytics</a> · Base chain · Peg ratio = <code>dex.trades</code> price ÷ <code>prices.fx_exchange_rates</code> · Ranked by DEX volume · Tokens with no Base DEX trades excluded</p>
+      <p class="ds-chart-note">Source: <a href="https://dune.com" target="_blank" rel="noopener">Dune Analytics</a> · Base chain · Peg ratio = Base price ÷ <code>prices.fx_exchange_rates</code> · Price from <code>dex.trades</code> where available, CoinPaprika otherwise · Sorted by data completeness</p>
     </div>
   </div>
 </section>
@@ -998,14 +1104,14 @@
     <p class="ds-desc">Total USD-equivalent value transferred on-chain. The primary signal of stablecoin utility as a settlement layer — analogous to SWIFT's daily FX turnover but operating 24/7 with near-instant finality.</p>
   </div>
   <div class="ds-kpis">
-    <div class="ds-kpi"><div class="ds-kpi-label">7D VOLUME</div><div class="ds-kpi-val">$284<span class="u">M</span></div><div class="ds-kpi-sub up">+12.4%</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">30D VOLUME</div><div class="ds-kpi-val">$1.1<span class="u">B</span></div><div class="ds-kpi-sub up">+8.7%</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">AVG TXN SIZE</div><div class="ds-kpi-val">$1,240</div><div class="ds-kpi-sub down">−3.1%</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">TOP TOKEN</div><div class="ds-kpi-val">EURC</div><div class="ds-kpi-sub flat">41% SHARE</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">7D VOLUME</div><div class="ds-kpi-val" id="volKpi7d">—</div><div class="ds-kpi-sub flat" id="volKpi7dSub">LOADING</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">30D VOLUME</div><div class="ds-kpi-val" id="volKpi30d">—</div><div class="ds-kpi-sub flat" id="volKpi30dSub">LOADING</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">ALL-TIME VOLUME</div><div class="ds-kpi-val" id="volKpiTotal">—</div><div class="ds-kpi-sub flat">SINCE EPOCH</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">TOP TOKEN</div><div class="ds-kpi-val" id="volKpiTop">—</div><div class="ds-kpi-sub flat" id="volKpiTopPct">—</div></div>
   </div>
   <div class="ds-charts c1">
     <div class="ds-chart-card">
-      <div class="ds-chart-lbl">// WEEKLY TRANSFER VOLUME BY TOKEN (USD)</div>
+      <div class="ds-chart-lbl">// P2P TRANSFER VOLUME BY PROJECT</div>
       <div class="ds-chart-body"><canvas id="chart-volume"></canvas></div>
     </div>
   </div>
@@ -1016,22 +1122,18 @@
   <div class="ds-header">
     <p class="ds-cluster">// FLOW</p>
     <h2 class="ds-title">Transactions</h2>
-    <p class="ds-desc">Count of on-chain transfers segmented by size — micro (&lt;$10), retail ($10–$10K), wholesale (&gt;$10K). The size distribution reveals whether a token serves remittances, merchant payments, or institutional FX settlement.</p>
+    <p class="ds-desc">Daily count of on-chain transfers for each international stablecoin on Base. Transaction counts reflect real usage across all wallet sizes.</p>
   </div>
   <div class="ds-kpis">
-    <div class="ds-kpi"><div class="ds-kpi-label">DAILY AVG</div><div class="ds-kpi-val">38.4<span class="u">K</span></div><div class="ds-kpi-sub up">+22%</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">30D TOTAL</div><div class="ds-kpi-val">1.15<span class="u">M</span></div><div class="ds-kpi-sub up">+18%</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">MICRO SHARE</div><div class="ds-kpi-val">54<span class="u">%</span></div><div class="ds-kpi-sub up">+4pp</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">WHOLESALE</div><div class="ds-kpi-val">8<span class="u">%</span></div><div class="ds-kpi-sub flat">STABLE</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">DAILY AVG</div><div class="ds-kpi-val" id="txnKpiAvg">—</div><div class="ds-kpi-sub flat" id="txnKpiAvgSub">LOADING</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">30D TOTAL</div><div class="ds-kpi-val" id="txnKpi30d">—</div><div class="ds-kpi-sub flat">LAST 30 DAYS</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">ALL-TIME TOTAL</div><div class="ds-kpi-val" id="txnKpiTotal">—</div><div class="ds-kpi-sub flat">SINCE EPOCH</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">TOP TOKEN</div><div class="ds-kpi-val" id="txnKpiTop">—</div><div class="ds-kpi-sub flat" id="txnKpiTopPct">—</div></div>
   </div>
-  <div class="ds-charts c2">
+  <div class="ds-charts c1">
     <div class="ds-chart-card">
-      <div class="ds-chart-lbl">// DAILY TRANSACTIONS · 13-WEEK VIEW</div>
+      <div class="ds-chart-lbl">// TRANSACTIONS BY PROJECT</div>
       <div class="ds-chart-body"><canvas id="chart-txns"></canvas></div>
-    </div>
-    <div class="ds-chart-card">
-      <div class="ds-chart-lbl">// SIZE DISTRIBUTION</div>
-      <div class="ds-chart-body sm"><canvas id="chart-txns-dist"></canvas></div>
     </div>
   </div>
 </section>
@@ -1041,39 +1143,18 @@
   <div class="ds-header">
     <p class="ds-cluster">// FLOW</p>
     <h2 class="ds-title">Velocity</h2>
-    <p class="ds-desc">Annualised turnover rate (Transfer Volume ÷ Circulating Supply). High velocity means capital is actively circulating rather than being held — the onchain proxy for FX market liquidity depth. SWIFT's FX benchmark sits near 2.5×.</p>
+    <p class="ds-desc">Annualised turnover rate (Transfer Volume ÷ Circulating Supply). High velocity means capital is actively circulating rather than being held — the onchain proxy for FX market liquidity depth.</p>
   </div>
   <div class="ds-kpis">
-    <div class="ds-kpi"><div class="ds-kpi-label">AVG VELOCITY (30D)</div><div class="ds-kpi-val">14.2<span class="u">×</span></div><div class="ds-kpi-sub up">+1.8×</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">HIGHEST</div><div class="ds-kpi-val">IDRX</div><div class="ds-kpi-sub flat">31× / YR</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">LOWEST</div><div class="ds-kpi-val">VCHF</div><div class="ds-kpi-sub flat">4.1× / YR</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">vs SWIFT FX</div><div class="ds-kpi-val">5.7<span class="u">×</span></div><div class="ds-kpi-sub up">FASTER</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">AVG VELOCITY (30D)</div><div class="ds-kpi-val" id="velKpiAvg">—</div><div class="ds-kpi-sub flat" id="velKpiAvgSub">—</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">HIGHEST</div><div class="ds-kpi-val" id="velKpiHigh">—</div><div class="ds-kpi-sub flat" id="velKpiHighSub">—</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">LOWEST</div><div class="ds-kpi-val" id="velKpiLow">—</div><div class="ds-kpi-sub flat" id="velKpiLowSub">—</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">TOKENS TRACKED</div><div class="ds-kpi-val" id="velKpiSwift">—</div><div class="ds-kpi-sub flat" id="velKpiSwiftSub">WITH DATA</div></div>
   </div>
   <div class="ds-charts c1">
     <div class="ds-chart-card">
-      <div class="ds-chart-lbl">// MONTHLY VELOCITY BY TOKEN (ANNUALISED) vs SWIFT BENCHMARK</div>
+      <div class="ds-chart-lbl">// VELOCITY BY PROJECT (ANNUALISED)</div>
       <div class="ds-chart-body"><canvas id="chart-velocity"></canvas></div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ BRIDGE VOLUME ═══ -->
-<section class="data-section" id="bridge-volume">
-  <div class="ds-header">
-    <p class="ds-cluster">// FLOW</p>
-    <h2 class="ds-title">Bridge Volume</h2>
-    <p class="ds-desc">Volume of international stablecoins bridged to and from Base across chains. Cross-chain movement is the digital equivalent of interbank NOSTRO/VOSTRO transfers — capital moving between settlement venues without losing peg.</p>
-  </div>
-  <div class="ds-kpis">
-    <div class="ds-kpi"><div class="ds-kpi-label">30D BRIDGE VOL</div><div class="ds-kpi-val">$340<span class="u">M</span></div><div class="ds-kpi-sub up">+31%</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">NET INFLOW</div><div class="ds-kpi-val">+$56<span class="u">M</span></div><div class="ds-kpi-sub up">BASE GROWING</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">TOP BRIDGE</div><div class="ds-kpi-val">CCTP</div><div class="ds-kpi-sub flat">CIRCLE</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">CHAINS ACTIVE</div><div class="ds-kpi-val">7</div><div class="ds-kpi-sub up">+2 NEW</div></div>
-  </div>
-  <div class="ds-charts c1">
-    <div class="ds-chart-card">
-      <div class="ds-chart-lbl">// BRIDGE INFLOW / OUTFLOW BY SOURCE CHAIN (30D, USD)</div>
-      <div class="ds-chart-body sm"><canvas id="chart-bridge"></canvas></div>
     </div>
   </div>
 </section>
@@ -1083,43 +1164,18 @@
   <div class="ds-header">
     <p class="ds-cluster">// MARKET</p>
     <h2 class="ds-title">DEX Activity</h2>
-    <p class="ds-desc">Decentralised exchange trading volume for international stablecoin pairs on Base. Reflects continuous price discovery and arbitrage — the onchain equivalent of an FX spot market operating without a central counterparty.</p>
+    <p class="ds-desc">Decentralised exchange trading volume for international stablecoin pairs on Base, sourced from Dune Analytics.</p>
   </div>
   <div class="ds-kpis">
-    <div class="ds-kpi"><div class="ds-kpi-label">24H DEX VOLUME</div><div class="ds-kpi-val">$42<span class="u">M</span></div><div class="ds-kpi-sub up">+9%</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">TOTAL LIQUIDITY</div><div class="ds-kpi-val">$180<span class="u">M</span></div><div class="ds-kpi-sub up">+5%</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">ACTIVE PAIRS</div><div class="ds-kpi-val">34</div><div class="ds-kpi-sub up">+6</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">TOP VENUE</div><div class="ds-kpi-val">AERO</div><div class="ds-kpi-sub flat">AERODROME</div></div>
-  </div>
-  <div class="ds-charts c2">
-    <div class="ds-chart-card">
-      <div class="ds-chart-lbl">// WEEKLY DEX VOLUME BY VENUE (USD)</div>
-      <div class="ds-chart-body"><canvas id="chart-dex"></canvas></div>
-    </div>
-    <div class="ds-chart-card">
-      <div class="ds-chart-lbl">// VOLUME SHARE BY VENUE</div>
-      <div class="ds-chart-body sm"><canvas id="chart-dex-venues"></canvas></div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ FX CORRIDORS ═══ -->
-<section class="data-section" id="fx-corridors">
-  <div class="ds-header">
-    <p class="ds-cluster">// MARKET</p>
-    <h2 class="ds-title">FX Corridors</h2>
-    <p class="ds-desc">Volume across currency-pair corridors — the onchain equivalent of MSCI FX market analysis. Identifies which bilateral payment routes are migrating from SWIFT to stablecoin rails, with emerging markets growing fastest.</p>
-  </div>
-  <div class="ds-kpis">
-    <div class="ds-kpi"><div class="ds-kpi-label">ACTIVE CORRIDORS</div><div class="ds-kpi-val">12</div><div class="ds-kpi-sub up">+3 NEW</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">TOP CORRIDOR</div><div class="ds-kpi-val">EUR↔USD</div><div class="ds-kpi-sub flat">$280M / MO</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">FASTEST GROWTH</div><div class="ds-kpi-val">BRL↔USD</div><div class="ds-kpi-sub up">+68% MOM</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">EM SHARE</div><div class="ds-kpi-val">44<span class="u">%</span></div><div class="ds-kpi-sub up">+8pp</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">7D DEX VOLUME</div><div class="ds-kpi-val" id="dexKpi7d">—</div><div class="ds-kpi-sub flat" id="dexKpi7dSub">LOADING</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">30D DEX VOLUME</div><div class="ds-kpi-val" id="dexKpi30d">—</div><div class="ds-kpi-sub flat" id="dexKpi30dSub">LOADING</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">ALL-TIME VOLUME</div><div class="ds-kpi-val" id="dexKpiTotal">—</div><div class="ds-kpi-sub flat">SINCE DATA START</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">TOP TOKEN</div><div class="ds-kpi-val" id="dexKpiTop">—</div><div class="ds-kpi-sub flat" id="dexKpiTopPct">—</div></div>
   </div>
   <div class="ds-charts c1">
     <div class="ds-chart-card">
-      <div class="ds-chart-lbl">// MONTHLY CORRIDOR VOLUME (USD) — TOP 8 PAIRS</div>
-      <div class="ds-chart-body"><canvas id="chart-corridors"></canvas></div>
+      <div class="ds-chart-lbl">// DEX VOLUME BY PROJECT (USD)</div>
+      <div class="ds-chart-body"><canvas id="chart-dex"></canvas></div>
     </div>
   </div>
 </section>
@@ -1129,19 +1185,11 @@
   <div class="ds-header">
     <p class="ds-cluster">// MARKET</p>
     <h2 class="ds-title">Liquidity</h2>
-    <p class="ds-desc">Total value locked in liquidity pools for international stablecoin pairs. Deeper liquidity reduces slippage — the onchain analog of bid-ask spread compression in traditional FX markets studied by the World Bank's remittance price database.</p>
+    <p class="ds-desc">Total value locked in DEX liquidity pools for international stablecoin pairs on Base.</p>
   </div>
-  <div class="ds-kpis">
-    <div class="ds-kpi"><div class="ds-kpi-label">TOTAL TVL</div><div class="ds-kpi-val">$180<span class="u">M</span></div><div class="ds-kpi-sub up">+14%</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">LARGEST POOL</div><div class="ds-kpi-val">EURC/USDC</div><div class="ds-kpi-sub flat">$48M</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">AVG SLIPPAGE $10K</div><div class="ds-kpi-val">0.08<span class="u">%</span></div><div class="ds-kpi-sub up">−0.02pp</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">POOL COUNT</div><div class="ds-kpi-val">47</div><div class="ds-kpi-sub up">+11</div></div>
-  </div>
-  <div class="ds-charts c1">
-    <div class="ds-chart-card">
-      <div class="ds-chart-lbl">// TVL BY TOKEN (USD) — TOP 10</div>
-      <div class="ds-chart-body sm"><canvas id="chart-liquidity"></canvas></div>
-    </div>
+  <div class="coming-soon-card">
+    <div class="coming-soon-badge">COMING SOON</div>
+    <p class="coming-soon-desc">Liquidity pool data is being integrated. Check back soon.</p>
   </div>
 </section>
 
@@ -1153,14 +1201,14 @@
     <p class="ds-desc">Daily and monthly unique addresses transacting international stablecoins on Base — analogous to the World Bank's Financial Access Survey measuring individuals with access to formal payment systems.</p>
   </div>
   <div class="ds-kpis">
-    <div class="ds-kpi"><div class="ds-kpi-label">DAILY ACTIVE (AVG)</div><div class="ds-kpi-val">24.7<span class="u">K</span></div><div class="ds-kpi-sub up">+31%</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">MONTHLY ACTIVE</div><div class="ds-kpi-val">218<span class="u">K</span></div><div class="ds-kpi-sub up">+28%</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">NEW WALLETS (30D)</div><div class="ds-kpi-val">42<span class="u">K</span></div><div class="ds-kpi-sub up">+19%</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">90D RETENTION</div><div class="ds-kpi-val">38<span class="u">%</span></div><div class="ds-kpi-sub up">+4pp</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">DAILY ACTIVE (AVG)</div><div class="ds-kpi-val" id="walKpiAvg">—</div><div class="ds-kpi-sub flat" id="walKpiAvgSub">LOADING</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">30D ACTIVE</div><div class="ds-kpi-val" id="walKpi30d">—</div><div class="ds-kpi-sub flat">LAST 30 DAYS</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">ALL-TIME TOTAL</div><div class="ds-kpi-val" id="walKpiTotal">—</div><div class="ds-kpi-sub flat">SINCE EPOCH</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">TOP TOKEN</div><div class="ds-kpi-val" id="walKpiTop">—</div><div class="ds-kpi-sub flat" id="walKpiTopPct">—</div></div>
   </div>
   <div class="ds-charts c1">
     <div class="ds-chart-card">
-      <div class="ds-chart-lbl">// DAILY ACTIVE ADDRESSES + NEW WALLETS · 13-WEEK VIEW</div>
+      <div class="ds-chart-lbl">// DAILY TRANSACTING ADDRESSES BY PROJECT</div>
       <div class="ds-chart-body"><canvas id="chart-wallets"></canvas></div>
     </div>
   </div>
@@ -1171,29 +1219,34 @@
   <div class="ds-header">
     <p class="ds-cluster">// ADOPTION</p>
     <h2 class="ds-title">Holder Distribution</h2>
-    <p class="ds-desc">Concentration analysis across wallet size brackets — the onchain equivalent of the World Bank Gini coefficient applied to FX access. High retail share indicates democratised access; institutional dominance may signal limited real-world utility.</p>
+    <p class="ds-desc">Historical count of unique addresses holding each international stablecoin on Base, and P2P transfer size distribution by token (Q1 2026 snapshot).</p>
   </div>
   <div class="ds-kpis">
-    <div class="ds-kpi"><div class="ds-kpi-label">TOTAL HOLDERS</div><div class="ds-kpi-val">310<span class="u">K</span></div><div class="ds-kpi-sub up">+22%</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">TOP 100 SHARE</div><div class="ds-kpi-val">62<span class="u">%</span></div><div class="ds-kpi-sub down">CONCENTRATED</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">RETAIL SHARE</div><div class="ds-kpi-val">89<span class="u">%</span></div><div class="ds-kpi-sub up">+3pp</div></div>
-    <div class="ds-kpi"><div class="ds-kpi-label">GINI COEFF (AVG)</div><div class="ds-kpi-val">0.78</div><div class="ds-kpi-sub flat">MODERATE</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">TOTAL HOLDERS</div><div class="ds-kpi-val" id="holKpiTotal">—</div><div class="ds-kpi-sub flat" id="holKpiTotalSub">ACROSS ALL TOKENS</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">LARGEST HOLDER BASE</div><div class="ds-kpi-val" id="holKpiTop">—</div><div class="ds-kpi-sub flat" id="holKpiTopSub">—</div></div>
+    <div class="ds-kpi"><div class="ds-kpi-label">TOKENS TRACKED</div><div class="ds-kpi-val" id="holKpiCount">—</div><div class="ds-kpi-sub flat">WITH HOLDER DATA</div></div>
   </div>
-  <div class="ds-charts c2">
+  <div class="ds-charts c1">
     <div class="ds-chart-card">
-      <div class="ds-chart-lbl">// HOLDER BRACKET DISTRIBUTION — TOP 6 TOKENS</div>
+      <div class="ds-chart-lbl"><span class="ds-chart-lbl-text">// HISTORICAL HOLDER COUNT BY PROJECT</span></div>
       <div class="ds-chart-body"><canvas id="chart-holders"></canvas></div>
     </div>
+  </div>
+  <div class="ds-charts c1" style="margin-top:1px">
     <div class="ds-chart-card">
-      <div class="ds-chart-lbl">// GINI COEFFICIENT TREND (12M)</div>
-      <div class="ds-chart-body sm"><canvas id="chart-gini"></canvas></div>
+      <div class="ds-chart-lbl"><span class="ds-chart-lbl-text">// P2P TRANSFER SIZE DISTRIBUTION (Q1 2026)</span></div>
+      <div class="ds-chart-body xxl"><canvas id="chart-txn-size"></canvas></div>
     </div>
   </div>
 </section>
 
 <footer>
   <div>© 2026 STABLECOIN.MAP · BUILT FOR &nbsp;<img src="base-logo.svg" class="base-logo-footer" alt="Base"></div>
-  <div>DATA · MANUAL CURATION · v1.0</div>
+  <a class="x-credit" href="https://x.com/_muhraf_" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.813-8.126-10.687h7.116l4.26 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+    @_MUHRAF_
+  </a>
+  <div>DATA · DUNE ANALYTICS · v1.0</div>
 </footer>
 
 </div><!-- /.page-body -->
@@ -1574,41 +1627,12 @@ if (document.readyState === "loading") {
   const TOTAL = 730;
   const EPOCH = new Date(2024, 4, 12); // May 12 2024
 
-  /* ── Data generators (deterministic, no Math.random) ── */
-  function dailyWave(base, growthPct, amp, phase) {
-    const noise = base * 0.15;
-    return Array.from({length: TOTAL}, (_, i) => {
-      const g = base * growthPct * (i / TOTAL);
-      return Math.max(0.1, Math.round(
-        (base + g + amp * Math.sin((i+phase)*0.05) +
-         noise * Math.sin((i+phase)*0.31) +
-         noise * 0.3 * Math.sin((i+phase)*0.7)) * 10) / 10);
-    });
-  }
-  function pegWave(base, amp, phase) {
-    return Array.from({length: TOTAL}, (_, i) =>
-      +(base + amp*Math.sin((i+phase)*0.08) + amp*0.3*Math.sin((i+phase)*0.5+1)).toFixed(4));
-  }
-  function floatWave(base, growthPct, amp, phase) {
-    return Array.from({length: TOTAL}, (_, i) => {
-      const g = base * growthPct * (i / TOTAL);
-      return +(base + g + amp*Math.sin((i+phase)*0.05) + amp*0.3*Math.sin((i+phase)*0.31)).toFixed(2);
-    });
-  }
-  function giniWave(base, decline, phase) {
-    return Array.from({length: TOTAL}, (_, i) =>
-      +(base - decline*(i/TOTAL) + 0.008*Math.sin((i+phase)*0.08)).toFixed(3));
-  }
-
   /* ── Pre-generated 730-day arrays ── */
   const C = {
     b0:'#0000ff', b1:'#3c8aff', b2:'#60a5fa', b3:'#93c5fd',
     b4:'#bfdbfe', b6:'#0ea5e9', b7:'#0284c7',
     gr:'#d8dde5', gt:'rgba(0,0,255,0.07)',
   };
-  const TOK  = ['EURC','BRLA','MXNE','XSGD','IDRX','ARGT'];
-  const TCOL = [C.b0, C.b1, C.b2, C.b3, C.b6, C.b7];
-
   const PRICE_OFFSET = 367; // real peg data starts day 367 (2025-05-14)
   const PEG_COLOR_MAP = {
     CADC:'#6d28d9', XSGD:'#22d3ee', AUDD:'#4d7c0f', VEUR:'#2563eb', VCHF:'#3b82f6',
@@ -1618,21 +1642,22 @@ if (document.readyState === "loading") {
   };
   // Token → underlying fiat currency (for FX_RATES lookup)
   const TOK_CUR = {
-    AUDD:'AUD', BRLA:'BRL', CADC:'CAD', CNGN:'NGN', EURAU:'EUR',
-    MXNE:'MXN', MYRC:'MYR', NZDD:'NZD', TGBP:'GBP', THBT:'THB',
-    TRYB:'TRY', VCHF:'CHF', VEUR:'EUR', VGBP:'GBP', WARS:'ARS',
+    AUDD:'AUD', BRLA:'BRL', BRZ:'BRL',  CADC:'CAD', CNGN:'NGN', EURAU:'EUR',
+    EURC:'EUR', IDRX:'IDR', MXNE:'MXN', MYRC:'MYR', NZDD:'NZD', TGBP:'GBP',
+    THBT:'THB', TRYB:'TRY', VCHF:'CHF', VEUR:'EUR', VGBP:'GBP', WARS:'ARS',
     XSGD:'SGD', YTRYB:'TRY', ZARP:'ZAR',
   };
-  // Excluded: systematic >7% deviation or near-zero DEX volume
-  const PEG_EXCL = new Set(['VGBP','MXNE','NZDD','THBT']);
-  const PEG_MAX  = 10;
-  // Ranked by DEX trading volume (from Dune dex.trades)
-  const PEG_VOL_RANK = ['CADC','XSGD','AUDD','VEUR','VCHF','TRYB','ZARP','EURAU','CNGN','TGBP','MYRC','BRLA'];
+  // Excluded: corrupted price history (extreme ratio spike or near-zero DEX volume)
+  const PEG_EXCL = new Set(['WARS','YTRYB','NZDD','THBT']);
   const hasDex = typeof DEX_PRICES !== 'undefined';
   const hasFx  = typeof FX_RATES  !== 'undefined';
-  const PEG_TOKS = (hasDex
-    ? PEG_VOL_RANK.filter(s => !PEG_EXCL.has(s) && DEX_PRICES[s])
-    : ['CADC','XSGD','TRYB','VCHF']).slice(0, PEG_MAX);
+  // All tokens with sufficient DEX data, sorted by observation count descending
+  const PEG_TOKS = hasDex
+    ? Object.keys(DEX_PRICES)
+        .filter(s => !PEG_EXCL.has(s))
+        .sort((a, b) => DEX_PRICES[b].filter(v => v !== null).length
+                      - DEX_PRICES[a].filter(v => v !== null).length)
+    : ['CADC','XSGD','TRYB','VCHF'];
   // Peg ratio computed live: DEX_PRICES[sym][i] / FX_RATES[currency][i]
   const PEG_DATA = {};
   PEG_TOKS.forEach(sym => {
@@ -1645,35 +1670,83 @@ if (document.readyState === "loading") {
       return Math.round((dex / fx) * 1e6) / 1e6;
     });
   });
-  const VOL_DATA = {
-    EURC: dailyWave(6.0,1.2,1.5,0), BRLA: dailyWave(2.5,1.5,0.6,3),
-    MXNE: dailyWave(1.2,1.2,0.4,6), XSGD: dailyWave(0.7,0.8,0.2,9),
-    IDRX: dailyWave(0.3,2.0,0.1,12),ARGT: dailyWave(0.4,1.8,0.15,15),
-  };
-  const TXN_DATA = Array.from({length:TOTAL},(_,i)=>
-    Math.max(1000,Math.round(4000+6000*(i/TOTAL)+800*Math.sin(i*0.05+2)+400*Math.sin(i*0.31))));
-  const VEL_DATA = {
-    EURC: floatWave(8,0.4,1.2,0),  BRLA: floatWave(12,0.6,2.0,3),
-    MXNE: floatWave(10,0.5,1.5,6), XSGD: floatWave(6,0.3,0.8,9),
-    IDRX: floatWave(20,0.8,3.0,12),ARGT: floatWave(14,0.7,2.5,15),
-  };
-  const DEX_KEYS = ['Aerodrome','Uniswap v3','Curve','Other'];
-  const DEX_DATA = {
-    'Aerodrome': dailyWave(2.6,1.3,0.5,0), 'Uniswap v3': dailyWave(1.1,0.8,0.3,4),
-    'Curve':     dailyWave(0.4,0.6,0.1,8), 'Other':      dailyWave(0.3,0.9,0.08,12),
-  };
-  const COR_KEYS = ['EUR↔USD','BRL↔USD','MXN↔USD','SGD↔USD','IDR↔USD','TRY↔USD','ARS↔USD','Other'];
-  const COR_COLS = [C.b0,C.b1,C.b2,C.b3,C.b4,C.b6,C.b7,C.gr];
-  const COR_DATA = [25,6.5,4.0,2.8,0.7,2.0,1.1,1.4]
-    .map((b,k)=>dailyWave(b,[1.4,1.8,1.4,1.2,2.0,0.5,1.5,1.2][k],b*0.12,k*2));
-  const WAL_DATA = Array.from({length:TOTAL},(_,i)=>
-    Math.round(18000+20000*(i/TOTAL)+2200*Math.sin(i*0.05+2)+800*Math.sin(i*0.31)));
-  const NEW_WAL_DATA = Array.from({length:TOTAL},(_,i)=>
-    Math.max(200,Math.round(3000+3000*(i/TOTAL)+500*Math.sin(i*0.05+5)+200*Math.sin(i*0.31))));
-  const GINI_DATA = {
-    EURC: giniWave(0.840,0.040,0), BRLA: giniWave(0.815,0.035,3),
-    MXNE: giniWave(0.790,0.030,6), XSGD: giniWave(0.765,0.025,9),
-    IDRX: giniWave(0.740,0.040,12),ARGT: giniWave(0.715,0.045,15),
+  // ── Real transfer volume data ──
+  const VOL_OFFSET = 10; // first data day (2024-05-22 = EPOCH+10)
+  const hasVol = typeof REAL_VOL !== 'undefined';
+  // Sort symbols by total volume descending
+  const VOL_ALL_SYMS = hasVol
+    ? Object.keys(REAL_VOL).sort((a,b) =>
+        REAL_VOL[b].reduce((s,v)=>s+(v||0),0) - REAL_VOL[a].reduce((s,v)=>s+(v||0),0))
+    : [];
+  // Tokens with total volume >= $1M shown individually; rest merged into Others
+  const VOL_THRESHOLD = 1; // USD millions
+  const VOL_MAIN = VOL_ALL_SYMS.filter(s => REAL_VOL[s].reduce((a,v)=>a+(v||0),0) >= VOL_THRESHOLD);
+  const VOL_SMALL = VOL_ALL_SYMS.filter(s => REAL_VOL[s].reduce((a,v)=>a+(v||0),0) <  VOL_THRESHOLD);
+  const VOL_DATA = {};
+
+  // ── Transaction + wallet data (txn-data.js) ──
+  const hasTxn = typeof REAL_TXN !== 'undefined' && typeof REAL_WAL !== 'undefined';
+  const TXN_THRESHOLD = 1000; // total txns to show individually
+  const TXN_ALL_SYMS = hasTxn
+    ? Object.keys(REAL_TXN).sort((a,b) =>
+        REAL_TXN[b].reduce((s,v)=>s+(v||0),0) - REAL_TXN[a].reduce((s,v)=>s+(v||0),0))
+    : [];
+  const TXN_MAIN  = TXN_ALL_SYMS.filter(s => REAL_TXN[s].reduce((a,v)=>a+(v||0),0) >= TXN_THRESHOLD);
+  const TXN_SMALL = TXN_ALL_SYMS.filter(s => REAL_TXN[s].reduce((a,v)=>a+(v||0),0) <  TXN_THRESHOLD);
+  const WAL_THRESHOLD = 100; // total wallet-days
+  const WAL_MAIN  = TXN_ALL_SYMS.filter(s => REAL_WAL[s].reduce((a,v)=>a+(v||0),0) >= WAL_THRESHOLD);
+  const WAL_SMALL = TXN_ALL_SYMS.filter(s => REAL_WAL[s].reduce((a,v)=>a+(v||0),0) <  WAL_THRESHOLD);
+
+  // ── Holders data (holders-data.js) ──
+  const hasHolders = typeof REAL_HOLDERS !== 'undefined';
+  const HOL_ALL_SYMS = hasHolders
+    ? Object.keys(REAL_HOLDERS).sort((a,b) => {
+        const la = REAL_HOLDERS[a].findIndex(v=>v!==null);
+        const lb = REAL_HOLDERS[b].findIndex(v=>v!==null);
+        return la - lb; // sort by earliest data first
+      })
+    : [];
+
+  let REAL_VEL = {}; // filled after _mcap is computed
+  // ── DEX volume data (dex-data.js) ──
+  const hasDexVol = typeof REAL_DEX !== 'undefined';
+  const DEX_VOL_THRESHOLD = 1; // USD millions total to show individually
+  const DEX_ALL_SYMS = hasDexVol
+    ? Object.keys(REAL_DEX).sort((a,b) =>
+        REAL_DEX[b].reduce((s,v)=>s+(v||0),0) - REAL_DEX[a].reduce((s,v)=>s+(v||0),0))
+    : [];
+  const DEX_MAIN  = DEX_ALL_SYMS.filter(s => REAL_DEX[s].reduce((a,v)=>a+(v||0),0) >= DEX_VOL_THRESHOLD);
+  const DEX_SMALL = DEX_ALL_SYMS.filter(s => REAL_DEX[s].reduce((a,v)=>a+(v||0),0) <  DEX_VOL_THRESHOLD);
+  // ── P2P transfer size buckets (Q1 2026 snapshot) ──
+  const BUCKET_LABELS = ['$0–$10','$10–$100','$100–$1K','$1K+'];
+  const BUCKET_DATA = {
+    "EURC":[108482,21465,16904,32903],
+    "IDRX":[12806,288,328,298],
+    "CNGN":[3886,894,607,558],
+    "XSGD":[455,25,51,2071],
+    "CADC":[2175,36,96,214],
+    "nTZS":[1172,0,0,0],
+    "BRZ":[176,119,371,69],
+    "AUDD":[129,26,300,209],
+    "ZARP":[129,7,51,454],
+    "MYRC":[133,80,173,160],
+    "THBT":[181,239,1,1],
+    "wARS":[109,45,124,48],
+    "VCHF":[78,0,14,123],
+    "TRYB":[71,17,25,11],
+    "BRLA":[71,0,2,47],
+    "ARSX":[71,0,0,0],
+    "VEUR":[19,1,0,35],
+    "EURAU":[37,0,3,3],
+    "VGBP":[24,2,9,7],
+    "TGBP":[14,10,4,3],
+    "ARGT":[21,2,1,0],
+    "NZDD":[7,0,0,3],
+    "WCOP":[5,0,2,0],
+    "MXNE":[6,0,0,0],
+    "NGNC":[4,0,0,0],
+    "ARST":[0,3,0,0],
+    "WCLP":[2,0,0,0],
   };
 
   /* ── Chart registry ── */
@@ -1707,108 +1780,274 @@ if (document.readyState === "loading") {
         annotation: { annotations: { pegLine: { type:'line', yMin:1, yMax:1, borderColor:'rgba(0,0,255,0.25)', borderWidth:1, borderDash:[4,4] } } },
       },
       scales:{
-        y:{ min:0.87, max:1.06, grid:{color:'rgba(216,221,229,0.4)'},
+        y:{ grid:{color:'rgba(216,221,229,0.4)'},
             ticks:{ callback: v => v === 1 ? '— PEG' : (((v-1)*100).toFixed(1)+'%'), font:{family:"'Inter Tight',sans-serif",size:9}, color:'#999' }},
         x:{ grid:{display:false}, ticks:{maxTicksLimit:8, font:{family:"'Inter Tight',sans-serif",size:9}, color:'#999'} }
       } }
   });
+  const VOL_COLOR_MAP = {
+    EURC:'#0000ff', EURAU:'#1d4ed8', VEUR:'#2563eb', VCHF:'#3b82f6',
+    VGBP:'#60a5fa', TGBP:'#0284c7', TRYB:'#0ea5e9',
+    BRLA:'#14532d', BRZ:'#15803d',  BRLY:'#16a34a',  MXNE:'#22c55e',
+    ARST:'#4ade80', ARGT:'#0f766e', wARS:'#0d9488',  ARSX:'#14b8a6',
+    WCLP:'#2dd4bf', WCOP:'#a7f3d0', WPEN:'#6ee7b7',
+    IDRX:'#164e63', THBT:'#0e7490', MYRC:'#06b6d4',  XSGD:'#22d3ee',
+    CNGN:'#78350f', NGNC:'#b45309', ZARP:'#d97706',  UGXC:'#fbbf24', nTZS:'#fde68a',
+    NZDD:'#365314', AUDD:'#4d7c0f', AUDF:'#84cc16',  CADC:'#6d28d9',
+  };
   mk('chart-volume', {
-    type:'bar', data:{ labels:[], datasets: TOK.map((t,i)=>({
-      label:t, data:[], backgroundColor:TCOL[i], borderRadius:2 })) },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top'}},
-      scales:{ x:{stacked:true,grid:{display:false},ticks:{maxTicksLimit:8}},
-               y:{stacked:true,grid:{color:'rgba(216,221,229,0.4)'},ticks:{callback:v=>`$${v}M`}} } }
+    type:'bar',
+    data:{ labels:[], datasets: [
+      ...VOL_MAIN.map(s => ({
+        label: s, data: [],
+        backgroundColor: (VOL_COLOR_MAP[s] || C.gr) + 'cc',
+        borderColor:      VOL_COLOR_MAP[s] || C.gr,
+        borderWidth: 0, borderRadius: 2, stack:'vol'
+      })),
+      { label:'Others', data:[], backgroundColor:'#d8dde5cc', borderColor:'#d8dde5', borderWidth:0, borderRadius:2, stack:'vol' },
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10 } },
+        tooltip:{ mode:'index', intersect:false,
+          itemSort: (a, b) => (b.parsed.y || 0) - (a.parsed.y || 0),
+          callbacks:{
+          label: ctx => {
+            const v = ctx.parsed.y;
+            if (v == null || v < 0.00001) return null;
+            const fmt = v >= 1000 ? `$${(v/1000).toFixed(2)}B`
+                      : v >= 1    ? `$${v.toFixed(4)}M`
+                      :             `$${(v*1000).toFixed(2)}K`;
+            return `${ctx.dataset.label}: ${fmt}`;
+          },
+          footer: items => {
+            const total = items.reduce((s,i)=>s+(i.parsed.y||0),0);
+            if (!total) return '';
+            const fmt = total >= 1000 ? `$${(total/1000).toFixed(2)}B`
+                      : total >= 1    ? `$${total.toFixed(2)}M`
+                      :                 `$${(total*1000).toFixed(2)}K`;
+            return `Total: ${fmt}`;
+          }
+        }}
+      },
+      scales:{
+        x:{ stacked:true, grid:{display:false}, ticks:{maxTicksLimit:8, font:{family:"'Inter Tight',sans-serif",size:9}} },
+        y:{ stacked:true, grid:{color:'rgba(216,221,229,0.4)'}, ticks:{callback: v => v>=1000?`$${(v/1000).toFixed(1)}B`: v>=1?`$${v}M`:`$${(v*1000).toFixed(0)}K`, font:{family:"'Inter Tight',sans-serif",size:9}} }
+      }
+    }
   });
   mk('chart-txns', {
-    type:'bar', data:{ labels:[], datasets:[
-      {label:'Transactions',data:[],backgroundColor:C.gt,borderColor:C.b0,borderWidth:1},
-      {label:'Moving Avg',  data:[],type:'line',borderColor:C.b0,backgroundColor:'transparent',borderWidth:2,pointRadius:0,tension:0.4},
+    type:'bar',
+    data:{ labels:[], datasets:[
+      ...TXN_MAIN.map(s => ({
+        label: s, data: [],
+        backgroundColor: (VOL_COLOR_MAP[s] || C.gr) + 'cc',
+        borderColor:      VOL_COLOR_MAP[s] || C.gr,
+        borderWidth: 0, borderRadius: 2, stack: 'txn',
+      })),
+      { label:'Others', data:[], backgroundColor:'#d8dde5cc', borderColor:'#d8dde5', borderWidth:0, borderRadius:2, stack:'txn' },
     ]},
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top'}},
-      scales:{ x:{grid:{display:false},ticks:{maxTicksLimit:8}},
-               y:{grid:{color:'rgba(216,221,229,0.4)'},ticks:{callback:v=>`${(v/1000).toFixed(0)}K`}} } }
-  });
-  mk('chart-txns-dist', {
-    type:'doughnut',
-    data:{ labels:['Micro (<$10)','Retail ($10–$10K)','Wholesale (>$10K)'],
-           datasets:[{data:[54,38,8],backgroundColor:[C.b0,C.b1,C.b3],borderWidth:0,hoverOffset:4}] },
-    options:{ responsive:true, maintainAspectRatio:false, cutout:'64%', plugins:{legend:{position:'bottom'}} }
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10 } },
+        tooltip:{ mode:'index', intersect:false,
+          itemSort:(a,b)=>(b.parsed.y||0)-(a.parsed.y||0),
+          callbacks:{
+            label: ctx => {
+              const v = ctx.parsed.y;
+              if (v == null || v < 1) return null;
+              return `${ctx.dataset.label}: ${v >= 1000 ? (v/1000).toFixed(1)+'K' : v.toFixed(0)}`;
+            },
+            footer: items => {
+              const t = items.reduce((s,i)=>s+(i.parsed.y||0),0);
+              return t > 0 ? `Total: ${t >= 1000 ? (t/1000).toFixed(1)+'K' : t.toFixed(0)}` : '';
+            }
+          }
+        }
+      },
+      scales:{
+        x:{ stacked:true, grid:{display:false}, ticks:{maxTicksLimit:8, font:{family:"'Inter Tight',sans-serif",size:9}} },
+        y:{ stacked:true, grid:{color:'rgba(216,221,229,0.4)'}, ticks:{callback:v=>v>=1000?`${(v/1000).toFixed(0)}K`:v, font:{family:"'Inter Tight',sans-serif",size:9}} }
+      }
+    }
   });
   mk('chart-velocity', {
     type:'line', data:{ labels:[], datasets:[
-      ...TOK.map((t,i)=>({label:t,data:[],borderColor:TCOL[i],backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3})),
       {label:'SWIFT FX Benchmark',data:[],borderColor:C.gr,backgroundColor:'transparent',borderWidth:1,borderDash:[5,4],pointRadius:0},
     ]},
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top'}},
-      scales:{ x:{grid:{display:false},ticks:{maxTicksLimit:8}},
-               y:{grid:{color:'rgba(216,221,229,0.4)'},ticks:{callback:v=>`${v}×`}} } }
-  });
-  mk('chart-bridge', {
-    type:'bar',
-    data:{ labels:['Ethereum','Polygon','Arbitrum','Optimism','BNB Chain','Avalanche','Solana'],
-           datasets:[
-             {label:'Inflow', data:[82,34,28,22,14,10,8],         backgroundColor:C.b0,borderRadius:2},
-             {label:'Outflow',data:[-58,-24,-20,-16,-10,-8,-6],   backgroundColor:C.b2,borderRadius:2},
-           ]},
-    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top'}},
-      scales:{ x:{grid:{color:'rgba(216,221,229,0.4)'},ticks:{callback:v=>`$${Math.abs(v)}M`}},
-               y:{grid:{display:false}} } }
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10 } },
+        tooltip:{ mode:'index', intersect:false,
+          itemSort:(a,b)=>(b.parsed.y||0)-(a.parsed.y||0),
+          callbacks:{
+            label: ctx => {
+              const v = ctx.parsed.y;
+              if (v == null || v < 0.01) return null;
+              return `${ctx.dataset.label}: ${v.toFixed(1)}×`;
+            },
+            footer: items => {
+              const vals = items.filter(i=>(i.parsed.y||0)>0);
+              if (!vals.length) return '';
+              const avg = vals.reduce((s,i)=>s+(i.parsed.y||0),0)/vals.length;
+              return `Avg: ${avg.toFixed(1)}×`;
+            }
+          }
+        }
+      },
+      scales:{ x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{family:"'Inter Tight',sans-serif",size:9}}},
+               y:{grid:{color:'rgba(216,221,229,0.4)'},ticks:{callback:v=>`${v}×`,font:{family:"'Inter Tight',sans-serif",size:9}}} } }
   });
   mk('chart-dex', {
-    type:'bar', data:{ labels:[], datasets: DEX_KEYS.map((k,i)=>({
-      label:k, data:[], backgroundColor:[C.b0,C.b1,C.b2,C.b4][i], borderRadius:2 })) },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top'}},
-      scales:{ x:{stacked:true,grid:{display:false},ticks:{maxTicksLimit:8}},
-               y:{stacked:true,grid:{color:'rgba(216,221,229,0.4)'},ticks:{callback:v=>`$${v}M`}} } }
-  });
-  mk('chart-dex-venues', {
-    type:'doughnut',
-    data:{ labels:['Aerodrome','Uniswap v3','Curve','Other'],
-           datasets:[{data:[55,25,12,8],backgroundColor:[C.b0,C.b1,C.b2,C.b4],borderWidth:0,hoverOffset:4}] },
-    options:{ responsive:true, maintainAspectRatio:false, cutout:'64%', plugins:{legend:{position:'bottom'}} }
-  });
-  mk('chart-corridors', {
-    type:'bar', data:{ labels:[], datasets: COR_KEYS.map((label,i)=>({
-      label, data:[], backgroundColor:COR_COLS[i], borderRadius:2 })) },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top'}},
-      scales:{ x:{stacked:true,grid:{display:false},ticks:{maxTicksLimit:8}},
-               y:{stacked:true,grid:{color:'rgba(216,221,229,0.4)'},ticks:{callback:v=>`$${v}M`}} } }
-  });
-  mk('chart-liquidity', {
     type:'bar',
-    data:{ labels:['EURC','BRLA','MXNE','XSGD','IDRX','ARGT','TRYB','VCHF','CADC','NZDD'],
-           datasets:[{label:'TVL (USD)',data:[48,32,24,18,14,12,10,9,8,7],
-             backgroundColor:Array.from({length:10},(_,i)=>`rgba(0,0,255,${0.9-i*0.08})`),borderRadius:3}] },
-    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
-      scales:{ x:{grid:{color:'rgba(216,221,229,0.4)'},ticks:{callback:v=>`$${v}M`}},y:{grid:{display:false}} } }
+    data:{ labels:[], datasets:[
+      ...DEX_MAIN.map(s => ({
+        label: s, data: [],
+        backgroundColor: (VOL_COLOR_MAP[s] || C.gr) + 'cc',
+        borderColor:      VOL_COLOR_MAP[s] || C.gr,
+        borderWidth: 0, borderRadius: 2, stack: 'dex',
+      })),
+      { label:'Others', data:[], backgroundColor:'#d8dde5cc', borderColor:'#d8dde5', borderWidth:0, borderRadius:2, stack:'dex' },
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10 } },
+        tooltip:{ mode:'index', intersect:false,
+          itemSort:(a,b)=>(b.parsed.y||0)-(a.parsed.y||0),
+          callbacks:{
+            label: ctx => {
+              const v = ctx.parsed.y;
+              if (v == null || v < 0.00001) return null;
+              const fmt = v >= 1000 ? `$${(v/1000).toFixed(2)}B`
+                        : v >= 1    ? `$${v.toFixed(2)}M`
+                        :             `$${(v*1000).toFixed(0)}K`;
+              return `${ctx.dataset.label}: ${fmt}`;
+            },
+            footer: items => {
+              const total = items.reduce((s,i)=>s+(i.parsed.y||0),0);
+              if (!total) return '';
+              const fmt = total >= 1000 ? `$${(total/1000).toFixed(2)}B`
+                        : total >= 1    ? `$${total.toFixed(2)}M`
+                        :                 `$${(total*1000).toFixed(0)}K`;
+              return `Total: ${fmt}`;
+            }
+          }
+        }
+      },
+      scales:{
+        x:{ stacked:true, grid:{display:false}, ticks:{maxTicksLimit:8, font:{family:"'Inter Tight',sans-serif",size:9}} },
+        y:{ stacked:true, grid:{color:'rgba(216,221,229,0.4)'}, ticks:{callback: v => v>=1000?`$${(v/1000).toFixed(1)}B`:v>=1?`$${v}M`:`$${(v*1000).toFixed(0)}K`, font:{family:"'Inter Tight',sans-serif",size:9}} }
+      }
+    }
   });
   mk('chart-wallets', {
-    type:'line', data:{ labels:[], datasets:[
-      {label:'Total Active',data:[],borderColor:C.b0,backgroundColor:C.gt,borderWidth:2,pointRadius:0,tension:0.4,fill:true},
-      {label:'New Wallets', data:[],borderColor:C.b1,backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.4},
+    type:'bar',
+    data:{ labels:[], datasets:[
+      ...WAL_MAIN.map(s => ({
+        label: s, data: [],
+        backgroundColor: (VOL_COLOR_MAP[s] || C.gr) + 'cc',
+        borderColor:      VOL_COLOR_MAP[s] || C.gr,
+        borderWidth: 0, borderRadius: 2, stack: 'wal',
+      })),
+      { label:'Others', data:[], backgroundColor:'#d8dde5cc', borderColor:'#d8dde5', borderWidth:0, borderRadius:2, stack:'wal' },
     ]},
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top'}},
-      scales:{ x:{grid:{display:false},ticks:{maxTicksLimit:8}},
-               y:{grid:{color:'rgba(216,221,229,0.4)'},ticks:{callback:v=>`${(v/1000).toFixed(0)}K`}} } }
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10 } },
+        tooltip:{ mode:'index', intersect:false,
+          itemSort:(a,b)=>(b.parsed.y||0)-(a.parsed.y||0),
+          callbacks:{
+            label: ctx => {
+              const v = ctx.parsed.y;
+              if (v == null || v < 1) return null;
+              return `${ctx.dataset.label}: ${v >= 1000 ? (v/1000).toFixed(1)+'K' : v.toFixed(0)}`;
+            },
+            footer: items => {
+              const t = items.reduce((s,i)=>s+(i.parsed.y||0),0);
+              return t > 0 ? `Total: ${t >= 1000 ? (t/1000).toFixed(1)+'K' : t.toFixed(0)}` : '';
+            }
+          }
+        }
+      },
+      scales:{
+        x:{ stacked:true, grid:{display:false}, ticks:{maxTicksLimit:8, font:{family:"'Inter Tight',sans-serif",size:9}} },
+        y:{ stacked:true, grid:{color:'rgba(216,221,229,0.4)'}, ticks:{callback:v=>v>=1000?`${(v/1000).toFixed(1)}K`:v, font:{family:"'Inter Tight',sans-serif",size:9}} }
+      }
+    }
   });
   mk('chart-holders', {
-    type:'bar', data:{ labels:TOK, datasets:[
-      {label:'>$1M (Whale)',    data:[12,8,10,15,6,20], backgroundColor:C.b0,borderRadius:2},
-      {label:'$100K–$1M (Inst)',data:[20,15,18,22,12,28],backgroundColor:C.b1,borderRadius:2},
-      {label:'$10K–$100K',     data:[30,28,25,30,22,28],backgroundColor:C.b2,borderRadius:2},
-      {label:'<$10K (Retail)', data:[38,49,47,33,60,24],backgroundColor:C.b3,borderRadius:2},
-    ]},
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top'}},
-      scales:{ x:{stacked:true,grid:{display:false}},
-               y:{stacked:true,max:100,grid:{color:'rgba(216,221,229,0.4)'},ticks:{callback:v=>`${v}%`}} } }
+    type:'line',
+    data:{ labels:[], datasets: HOL_ALL_SYMS.map(s => ({
+      label: s, data: [],
+      borderColor:     VOL_COLOR_MAP[s] || C.gr,
+      backgroundColor: 'transparent',
+      borderWidth: 1.5, pointRadius: 0, tension: 0.3,
+    }))},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10 } },
+        tooltip:{ mode:'index', intersect:false,
+          itemSort:(a,b)=>(b.parsed.y||0)-(a.parsed.y||0),
+          callbacks:{
+            label: ctx => {
+              const v = ctx.parsed.y;
+              if (v == null || v < 1) return null;
+              return `${ctx.dataset.label}: ${v >= 1000 ? (v/1000).toFixed(1)+'K' : v.toFixed(0)}`;
+            },
+            footer: items => {
+              const t = items.reduce((s,i)=>s+(i.parsed.y||0),0);
+              return t > 0 ? `Total: ${t >= 1000 ? (t/1000).toFixed(1)+'K' : t.toFixed(0)}` : '';
+            }
+          }
+        }
+      },
+      scales:{
+        x:{ grid:{display:false}, ticks:{maxTicksLimit:8, font:{family:"'Inter Tight',sans-serif",size:9}} },
+        y:{ grid:{color:'rgba(216,221,229,0.4)'}, ticks:{callback:v=>v>=1000?`${(v/1000).toFixed(0)}K`:v, font:{family:"'Inter Tight',sans-serif",size:9}} }
+      }
+    }
   });
-  mk('chart-gini', {
-    type:'line', data:{ labels:[], datasets: TOK.map((t,i)=>({
-      label:t, data:[], borderColor:TCOL[i], backgroundColor:'transparent',
-      borderWidth:1.5, pointRadius:0, tension:0.4 })) },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top'}},
-      scales:{ x:{grid:{display:false},ticks:{maxTicksLimit:8}},
-               y:{min:0.6,max:0.9,grid:{color:'rgba(216,221,229,0.4)'},ticks:{stepSize:0.1}} } }
+  // Sort tokens by total P2P transaction count descending
+  const TXN_SIZE_SYMS = Object.keys(BUCKET_DATA).sort((a,b) =>
+    BUCKET_DATA[b].reduce((s,v)=>s+v,0) - BUCKET_DATA[a].reduce((s,v)=>s+v,0));
+  const TXN_SIZE_COLS = ['#0000ff','#3c8aff','#60a5fa','#93c5fd'];
+  mk('chart-txn-size', {
+    type:'bar',
+    data:{
+      labels: TXN_SIZE_SYMS,
+      datasets: BUCKET_LABELS.map((label, bi) => ({
+        label,
+        data: TXN_SIZE_SYMS.map(s => BUCKET_DATA[s][bi] || 0),
+        backgroundColor: TXN_SIZE_COLS[bi] + 'cc',
+        borderColor: TXN_SIZE_COLS[bi],
+        borderWidth: 0, borderRadius: 2, stack: 'size',
+      }))
+    },
+    options:{
+      indexAxis: 'y',
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10 } },
+        tooltip:{ mode:'index', intersect:false,
+          itemSort:(a,b)=>(b.parsed.x||0)-(a.parsed.x||0),
+          callbacks:{
+            label: ctx => {
+              const v = ctx.parsed.x;
+              if (!v) return null;
+              return `${ctx.dataset.label}: ${v >= 1000 ? (v/1000).toFixed(1)+'K' : v}`;
+            },
+            footer: items => {
+              const t = items.reduce((s,i)=>s+(i.parsed.x||0),0);
+              return t > 0 ? `Total: ${t >= 1000 ? (t/1000).toFixed(1)+'K' : t}` : '';
+            }
+          }
+        }
+      },
+      scales:{
+        y:{ stacked:true, grid:{display:false}, ticks:{font:{family:"'Inter Tight',sans-serif",size:9}} },
+        x:{ stacked:true, grid:{color:'rgba(216,221,229,0.4)'}, ticks:{callback:v=>v>=1000?`${(v/1000).toFixed(0)}K`:v, font:{family:"'Inter Tight',sans-serif",size:9}} }
+      }
+    }
   });
 
   /* ══════════════════════════════════════════════════════
@@ -1848,8 +2087,8 @@ if (document.readyState === "loading") {
   function makeAgg(buckets) {
     function sumB(data) {
       return buckets.map(b => {
-        let s = 0; for (let i = b.from; i <= b.to; i++) s += data[i];
-        return Math.round(s * 10) / 10;
+        let s = 0; for (let i = b.from; i <= b.to; i++) s += (data[i] || 0);
+        return Math.round(s * 1e4) / 1e4;
       });
     }
     function avgB(data, prec=4) {
@@ -1872,46 +2111,80 @@ if (document.readyState === "loading") {
     'chart-volume': (ch, buckets, labels) => {
       const { sumB } = makeAgg(buckets);
       ch.data.labels = labels;
-      ch.data.datasets.forEach((ds, i) => { ds.data = sumB(VOL_DATA[TOK[i]]); });
+      ch.data.datasets.forEach(ds => {
+        if (ds.label === 'Others') {
+          const othersArr = Array.from({length: TOTAL}, (_, i) =>
+            VOL_SMALL.reduce((s, sym) => s + (REAL_VOL[sym]?.[i] || 0), 0));
+          ds.data = sumB(othersArr);
+        } else {
+          ds.data = sumB(REAL_VOL[ds.label] || new Array(TOTAL).fill(0));
+        }
+      });
     },
     'chart-txns': (ch, buckets, labels) => {
       const { sumB } = makeAgg(buckets);
-      const raw = sumB(TXN_DATA);
-      const ma  = raw.map((_, k, a) => {
-        const win = a.slice(Math.max(0, k-3), k+1);
-        return Math.round(win.reduce((s,v)=>s+v,0) / win.length);
-      });
       ch.data.labels = labels;
-      ch.data.datasets[0].data = raw;
-      ch.data.datasets[1].data = ma;
+      ch.data.datasets.forEach(ds => {
+        if (ds.label === 'Others') {
+          const arr = Array.from({length: TOTAL}, (_, i) =>
+            TXN_SMALL.reduce((s, sym) => s + (REAL_TXN[sym]?.[i] || 0), 0));
+          ds.data = sumB(arr);
+        } else {
+          ds.data = sumB(REAL_TXN[ds.label] || new Array(TOTAL).fill(0));
+        }
+      });
     },
     'chart-velocity': (ch, buckets, labels) => {
-      const { avgB } = makeAgg(buckets);
       ch.data.labels = labels;
-      ch.data.datasets.forEach((ds, i) => {
-        ds.data = i < TOK.length ? avgB(VEL_DATA[TOK[i]], 2) : Array(buckets.length).fill(2.5);
+      ch.data.datasets.forEach(ds => {
+        const raw = REAL_VEL[ds.label];
+        if (!raw) { ds.data = Array(buckets.length).fill(null); return; }
+        ds.data = buckets.map(b => {
+          let s = 0, n = 0;
+          for (let k = b.from; k <= b.to; k++) {
+            if (raw[k] != null) { s += raw[k]; n++; }
+          }
+          return n > 0 ? Math.round(s / n * 100) / 100 : null;
+        });
       });
     },
     'chart-dex': (ch, buckets, labels) => {
       const { sumB } = makeAgg(buckets);
       ch.data.labels = labels;
-      ch.data.datasets.forEach((ds, i) => { ds.data = sumB(DEX_DATA[DEX_KEYS[i]]); });
-    },
-    'chart-corridors': (ch, buckets, labels) => {
-      const { sumB } = makeAgg(buckets);
-      ch.data.labels = labels;
-      ch.data.datasets.forEach((ds, i) => { ds.data = sumB(COR_DATA[i]); });
+      ch.data.datasets.forEach(ds => {
+        if (ds.label === 'Others') {
+          const arr = Array.from({length: TOTAL}, (_, i) =>
+            DEX_SMALL.reduce((s, sym) => s + (REAL_DEX[sym]?.[i] || 0), 0));
+          ds.data = sumB(arr);
+        } else {
+          ds.data = sumB(REAL_DEX[ds.label] || new Array(TOTAL).fill(0));
+        }
+      });
     },
     'chart-wallets': (ch, buckets, labels) => {
-      const { sumB, lastB } = makeAgg(buckets);
+      const { sumB } = makeAgg(buckets);
       ch.data.labels = labels;
-      ch.data.datasets[0].data = lastB(WAL_DATA);
-      ch.data.datasets[1].data = sumB(NEW_WAL_DATA);
+      ch.data.datasets.forEach(ds => {
+        if (ds.label === 'Others') {
+          const arr = Array.from({length: TOTAL}, (_, i) =>
+            WAL_SMALL.reduce((s, sym) => s + (REAL_WAL[sym]?.[i] || 0), 0));
+          ds.data = sumB(arr);
+        } else {
+          ds.data = sumB(REAL_WAL[ds.label] || new Array(TOTAL).fill(0));
+        }
+      });
     },
-    'chart-gini': (ch, buckets, labels) => {
-      const { avgB } = makeAgg(buckets);
+    'chart-holders': (ch, buckets, labels) => {
       ch.data.labels = labels;
-      ch.data.datasets.forEach((ds, i) => { ds.data = avgB(GINI_DATA[TOK[i]], 3); });
+      ch.data.datasets.forEach(ds => {
+        const raw = REAL_HOLDERS?.[ds.label];
+        if (!raw) { ds.data = Array(buckets.length).fill(null); return; }
+        // holders = snapshot, use last value in each bucket
+        ds.data = buckets.map(b => {
+          for (let k = b.to; k >= b.from; k--) { if (raw[k] != null) return raw[k]; }
+          return null;
+        });
+      });
     },
     'chart-supply-history': (ch, buckets, labels) => {
       const { lastB } = makeAgg(buckets);
@@ -2055,6 +2328,54 @@ if (document.readyState === "loading") {
     });
   }
   window.MCAP_DATA = _mcap;
+
+  /* ── Real velocity: annualised transfer volume ÷ circulating supply ── */
+  if (hasVol && Object.keys(_mcap).length) {
+    VOL_ALL_SYMS.forEach(sym => {
+      if (!_mcap[sym]) return;
+      const arr = Array.from({length: TOTAL}, (_, i) => {
+        const v = REAL_VOL[sym]?.[i] || 0;
+        const m = _mcap[sym][i]  || 0;
+        if (v <= 0 || m <= 0) return null;
+        return Math.round((v / m) * 365 * 100) / 100;
+      });
+      if (arr.filter(x => x != null).length >= 10) REAL_VEL[sym] = arr;
+    });
+    // Build token list sorted by data completeness
+    const velToks = Object.keys(REAL_VEL)
+      .sort((a, b) => REAL_VEL[b].filter(x=>x!=null).length - REAL_VEL[a].filter(x=>x!=null).length);
+    // Inject datasets into already-created chart
+    if (charts['chart-velocity']) {
+      charts['chart-velocity'].data.datasets = [
+        ...velToks.map(t => ({
+          label: t, data: [],
+          borderColor:     (VOL_COLOR_MAP[t] || C.gr),
+          backgroundColor: 'transparent',
+          borderWidth: 1.5, pointRadius: 0, tension: 0.3,
+        })),
+      ];
+    }
+    // Populate velocity KPI cards
+    const vel30 = {};
+    velToks.forEach(s => {
+      const vals = [];
+      for (let i = TOTAL - 30; i < TOTAL; i++) { if (REAL_VEL[s]?.[i] != null) vals.push(REAL_VEL[s][i]); }
+      if (vals.length) vel30[s] = vals.reduce((a,b)=>a+b,0) / vals.length;
+    });
+    const vel30Toks = Object.keys(vel30).sort((a,b)=>vel30[b]-vel30[a]);
+    if (vel30Toks.length) {
+      const allAvg = Object.values(vel30).reduce((a,b)=>a+b,0) / vel30Toks.length;
+      const highest = vel30Toks[0];
+      const lowest  = vel30Toks[vel30Toks.length - 1];
+      document.getElementById('velKpiAvg').innerHTML    = allAvg.toFixed(1) + '<span class="u">×</span>';
+      document.getElementById('velKpiAvgSub').textContent = 'LAST 30 DAYS';
+      document.getElementById('velKpiHigh').textContent = highest;
+      document.getElementById('velKpiHighSub').textContent = vel30[highest].toFixed(0) + '× / YR';
+      document.getElementById('velKpiLow').textContent  = lowest;
+      document.getElementById('velKpiLowSub').textContent  = vel30[lowest].toFixed(1) + '× / YR';
+      document.getElementById('velKpiSwift').textContent = velToks.length;
+    }
+  }
 
   /* ── Regional supply aggregation (for supply history stacked bar) ── */
   const REGION_TOKENS = {
@@ -2281,7 +2602,7 @@ if (document.readyState === "loading") {
 
   /* ── Attach controls to all time-series charts ── */
   ['chart-peg','chart-volume','chart-txns','chart-velocity',
-   'chart-dex','chart-corridors','chart-wallets','chart-gini',
+   'chart-dex','chart-wallets','chart-holders',
    'chart-supply-history','chart-supply-symbol']
     .forEach(id => addChartControls(id));
 
@@ -2330,6 +2651,259 @@ if (document.readyState === "loading") {
     document.getElementById('pegWeakestSym').textContent = weakestSym;
     document.getElementById('pegWeakestDev').textContent = '−' + fmtPct(weakestDev) + '%';
   }
+
+  /* Volume chart defaults to real-data window */
+  if (hasVol) {
+    const volSt = states['chart-volume'];
+    if (volSt) {
+      volSt.start = VOL_OFFSET;
+      volSt.els.rangeS.value = VOL_OFFSET;
+      refreshChart('chart-volume');
+    }
+    /* Populate volume KPI cards */
+    const fmtVol = v => v >= 1000 ? '$'+(v/1000).toFixed(1)+'<span class="u">B</span>'
+                      : v >= 1    ? '$'+v.toFixed(1)+'<span class="u">M</span>'
+                      :             '$'+(v*1000).toFixed(0)+'<span class="u">K</span>';
+    let vol7 = 0, vol30 = 0, volTotal = 0;
+    const volByToken = {};
+    VOL_ALL_SYMS.forEach(s => {
+      let t7=0, t30=0, tAll=0;
+      REAL_VOL[s].forEach((v,i) => {
+        const val = v||0;
+        tAll += val;
+        if (i >= TOTAL-30) t30 += val;
+        if (i >= TOTAL-7)  t7  += val;
+      });
+      vol7 += t7; vol30 += t30; volTotal += tAll;
+      volByToken[s] = tAll;
+    });
+    const topSym = VOL_ALL_SYMS[0];
+    const topPct = volTotal > 0 ? Math.round(volByToken[topSym]/volTotal*100) : 0;
+    document.getElementById('volKpi7d').innerHTML    = fmtVol(vol7);
+    document.getElementById('volKpi7dSub').textContent = 'LAST 7 DAYS';
+    document.getElementById('volKpi30d').innerHTML   = fmtVol(vol30);
+    document.getElementById('volKpi30dSub').textContent = 'LAST 30 DAYS';
+    document.getElementById('volKpiTotal').innerHTML = fmtVol(volTotal);
+    document.getElementById('volKpiTop').textContent = topSym || '—';
+    document.getElementById('volKpiTopPct').textContent = topPct + '% SHARE';
+  }
+
+  /* Transactions + Active Wallets charts default to data window (day 365+) and populate KPIs */
+  if (hasTxn) {
+    const fmtN = v => v >= 1e6 ? (v/1e6).toFixed(2)+'<span class="u">M</span>'
+                    : v >= 1e3 ? (v/1e3).toFixed(1)+'<span class="u">K</span>'
+                    : v.toFixed(0);
+    ['chart-txns','chart-wallets'].forEach(id => {
+      const st = states[id];
+      if (!st) return;
+      st.start = SUPPLY_OFFSET;
+      st.els.rangeS.value = SUPPLY_OFFSET;
+      refreshChart(id);
+    });
+    // Transactions KPIs
+    let txn30=0, txnTotal=0; const txnByTok={};
+    TXN_ALL_SYMS.forEach(s => {
+      let tAll=0, t30=0;
+      REAL_TXN[s].forEach((v,i)=>{ const val=v||0; tAll+=val; if(i>=TOTAL-30) t30+=val; });
+      txnTotal+=tAll; txn30+=t30; txnByTok[s]=tAll;
+    });
+    const daysWithData = TXN_ALL_SYMS.reduce((mx,s)=> Math.max(mx, REAL_TXN[s].filter(v=>v!=null).length), 0);
+    const txnAvg = daysWithData > 0 ? txnTotal / daysWithData : 0;
+    const txnTop = TXN_ALL_SYMS[0];
+    const txnTopPct = txnTotal > 0 ? Math.round(txnByTok[txnTop]/txnTotal*100) : 0;
+    document.getElementById('txnKpiAvg').innerHTML   = fmtN(txnAvg);
+    document.getElementById('txnKpiAvgSub').textContent = 'PER ACTIVE DAY';
+    document.getElementById('txnKpi30d').innerHTML   = fmtN(txn30);
+    document.getElementById('txnKpiTotal').innerHTML = fmtN(txnTotal);
+    document.getElementById('txnKpiTop').textContent = txnTop || '—';
+    document.getElementById('txnKpiTopPct').textContent = txnTopPct + '% SHARE';
+    // Active Wallets KPIs
+    let wal30=0, walTotal=0; const walByTok={};
+    TXN_ALL_SYMS.forEach(s => {
+      let tAll=0, t30=0;
+      REAL_WAL[s].forEach((v,i)=>{ const val=v||0; tAll+=val; if(i>=TOTAL-30) t30+=val; });
+      walTotal+=tAll; wal30+=t30; walByTok[s]=tAll;
+    });
+    const walDays = TXN_ALL_SYMS.reduce((mx,s)=> Math.max(mx, REAL_WAL[s].filter(v=>v!=null).length), 0);
+    const walAvg = walDays > 0 ? walTotal / walDays : 0;
+    const walTop = Object.keys(walByTok).sort((a,b)=>walByTok[b]-walByTok[a])[0];
+    const walTopPct = walTotal > 0 ? Math.round(walByTok[walTop]/walTotal*100) : 0;
+    document.getElementById('walKpiAvg').innerHTML   = fmtN(walAvg);
+    document.getElementById('walKpiAvgSub').textContent = 'PER ACTIVE DAY';
+    document.getElementById('walKpi30d').innerHTML   = fmtN(wal30);
+    document.getElementById('walKpiTotal').innerHTML = fmtN(walTotal);
+    document.getElementById('walKpiTop').textContent = walTop || '—';
+    document.getElementById('walKpiTopPct').textContent = walTopPct + '% SHARE';
+  }
+
+  /* Holders chart defaults to data window and populates KPIs */
+  if (hasHolders) {
+    const holSt = states['chart-holders'];
+    if (holSt) {
+      holSt.start = SUPPLY_OFFSET;
+      holSt.els.rangeS.value = SUPPLY_OFFSET;
+      refreshChart('chart-holders');
+    }
+    const fmtH = v => v >= 1e6 ? (v/1e6).toFixed(2)+'<span class="u">M</span>'
+                    : v >= 1e3 ? (v/1e3).toFixed(1)+'<span class="u">K</span>'
+                    : v.toFixed(0);
+    // Latest holder count per token (last non-null value)
+    const latestHolders = {};
+    HOL_ALL_SYMS.forEach(s => {
+      const arr = REAL_HOLDERS[s];
+      for (let i = TOTAL-1; i >= 0; i--) { if (arr[i] != null) { latestHolders[s] = arr[i]; break; } }
+    });
+    const totalHolders = Object.values(latestHolders).reduce((a,b)=>a+b,0);
+    const topTok = Object.keys(latestHolders).sort((a,b)=>latestHolders[b]-latestHolders[a])[0];
+    document.getElementById('holKpiTotal').innerHTML  = fmtH(totalHolders);
+    document.getElementById('holKpiTop').textContent  = topTok || '—';
+    document.getElementById('holKpiTopSub').textContent = topTok ? latestHolders[topTok].toLocaleString()+' HOLDERS' : '—';
+    document.getElementById('holKpiCount').textContent = HOL_ALL_SYMS.length;
+  }
+
+  /* DEX chart defaults to data window and populates KPIs */
+  if (hasDexVol) {
+    const dexSt = states['chart-dex'];
+    if (dexSt) {
+      dexSt.start = SUPPLY_OFFSET;
+      dexSt.els.rangeS.value = SUPPLY_OFFSET;
+      refreshChart('chart-dex');
+    }
+    const fmtDex = v => v >= 1000 ? '$'+(v/1000).toFixed(1)+'<span class="u">B</span>'
+                      : v >= 1    ? '$'+v.toFixed(1)+'<span class="u">M</span>'
+                      :             '$'+(v*1000).toFixed(0)+'<span class="u">K</span>';
+    let dex7=0, dex30=0, dexTotal=0;
+    const dexByTok = {};
+    DEX_ALL_SYMS.forEach(s => {
+      let tAll=0, t7=0, t30=0;
+      REAL_DEX[s].forEach((v,i) => { const val=v||0; tAll+=val; if(i>=TOTAL-30) t30+=val; if(i>=TOTAL-7) t7+=val; });
+      dexTotal+=tAll; dex30+=t30; dex7+=t7; dexByTok[s]=tAll;
+    });
+    const dexTop = DEX_ALL_SYMS[0];
+    const dexTopPct = dexTotal > 0 ? Math.round(dexByTok[dexTop]/dexTotal*100) : 0;
+    document.getElementById('dexKpi7d').innerHTML    = fmtDex(dex7);
+    document.getElementById('dexKpi7dSub').textContent = 'LAST 7 DAYS';
+    document.getElementById('dexKpi30d').innerHTML   = fmtDex(dex30);
+    document.getElementById('dexKpi30dSub').textContent = 'LAST 30 DAYS';
+    document.getElementById('dexKpiTotal').innerHTML = fmtDex(dexTotal);
+    document.getElementById('dexKpiTop').textContent = dexTop || '—';
+    document.getElementById('dexKpiTopPct').textContent = dexTopPct + '% SHARE';
+  }
+
+  /* ── Chart image download ── */
+  /* Draw the X (Twitter) logo as a filled black path at (x, y) with given pixel size */
+  function drawXLogo(ctx, x, y, size) {
+    const scale = size / 24;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+    ctx.fillStyle = '#000000';
+    ctx.fill(new Path2D('M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.813-8.126-10.687h7.116l4.26 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z'));
+    ctx.restore();
+  }
+
+  function downloadChartAsImage(id) {
+    const ch = charts[id];
+    if (!ch) return;
+    const src = ch.canvas;
+    const dpr = window.devicePixelRatio || 1;
+    const W = src.width, H = src.height;
+    const HDR = Math.round(40 * dpr);
+    const FTR = Math.round(32 * dpr);
+
+    const out = document.createElement('canvas');
+    out.width  = W;
+    out.height = H + HDR + FTR;
+    const ctx = out.getContext('2d');
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, out.width, out.height);
+
+    // Header: chart label
+    const card = src.closest('.ds-chart-card');
+    const lblEl = card?.querySelector('.ds-chart-lbl-text') || card?.querySelector('.ds-chart-lbl');
+    const lbl = (lblEl?.textContent || '').trim();
+    ctx.fillStyle = '#4a5266';
+    ctx.font = `600 ${Math.round(10 * dpr)}px "Inter Tight", sans-serif`;
+    ctx.letterSpacing = `${1.5 * dpr}px`;
+    ctx.fillText(lbl, Math.round(14 * dpr), Math.round(26 * dpr));
+    ctx.letterSpacing = '0px';
+
+    // Chart
+    ctx.drawImage(src, 0, HDR);
+
+    // Footer rule
+    ctx.strokeStyle = '#e4e7ed';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, H + HDR + 0.5);
+    ctx.lineTo(out.width, H + HDR + 0.5);
+    ctx.stroke();
+
+    const pad = Math.round(14 * dpr);
+
+    // Footer: source (left)  |  X @_muhraf_ (right)
+    const iconSz = Math.round(11 * dpr);
+    const fy = H + HDR + Math.round(20 * dpr);
+    const fSz = Math.round(9 * dpr);
+
+    // Left: source
+    ctx.font = `400 ${fSz}px "Inter Tight", sans-serif`;
+    ctx.fillStyle = '#8b91a2';
+    ctx.fillText('Source: dune.com/base_ds', pad, fy);
+
+    // Right: X logo + @_muhraf_
+    ctx.font = `700 ${fSz}px "Inter Tight", sans-serif`;
+    ctx.fillStyle = '#000000';
+    const handleW = ctx.measureText('@_muhraf_').width;
+    const xLogoX = out.width - pad - handleW - iconSz - Math.round(4 * dpr);
+    drawXLogo(ctx, xLogoX, fy - iconSz + Math.round(1 * dpr), iconSz);
+    ctx.fillText('@_muhraf_', xLogoX + iconSz + Math.round(4 * dpr), fy);
+
+    const link = document.createElement('a');
+    const section = src.closest('.data-section');
+    const title = (section?.querySelector('.ds-title')?.textContent || id).trim().toLowerCase().replace(/\s+/g,'-');
+    link.download = `${title}-${new Date().toISOString().slice(0,10)}.png`;
+    link.href = out.toDataURL('image/png');
+    link.click();
+  }
+
+  /* ── Inject download button + card footer into every chart card ── */
+  const _xSvg = `<svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.813-8.126-10.687h7.116l4.26 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`;
+  const _footerDate = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
+  Object.keys(charts).forEach(id => {
+    const canvas = document.getElementById(id);
+    if (!canvas) return;
+    const card = canvas.closest('.ds-chart-card');
+    if (!card) return;
+
+    // Download button in label
+    const lblEl = card.querySelector('.ds-chart-lbl');
+    if (lblEl && !lblEl.querySelector('.chart-dl-btn')) {
+      if (!lblEl.querySelector('.ds-chart-lbl-text')) {
+        const wrap = document.createElement('span');
+        wrap.className = 'ds-chart-lbl-text';
+        wrap.textContent = lblEl.textContent.trim();
+        lblEl.textContent = '';
+        lblEl.appendChild(wrap);
+      }
+      const btn = document.createElement('button');
+      btn.className = 'chart-dl-btn';
+      btn.title = 'Download as PNG';
+      btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+      btn.onclick = () => downloadChartAsImage(id);
+      lblEl.appendChild(btn);
+    }
+
+    // Footer strip at bottom of card
+    if (!card.querySelector('.ds-chart-footer')) {
+      const ftr = document.createElement('div');
+      ftr.className = 'ds-chart-footer';
+      ftr.innerHTML = `<a class="cft-source" href="https://dune.com/base_ds/international-stablecoins" target="_blank" rel="noopener">Source: dune (@base_ds)</a><div class="cft-right">${_xSvg}<span class="cft-handle">@_muhraf_</span></div>`;
+      card.appendChild(ftr);
+    }
+  });
 
   /* ── Sidebar active state ── */
   const navLinks = document.querySelectorAll('.sidenav-item[href^="#"]');
