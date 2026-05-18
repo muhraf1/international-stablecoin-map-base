@@ -917,6 +917,105 @@
   .x-credit-nav:hover { border-color: #333; color: #333; }
   .x-credit-nav svg { width: 11px; height: 11px; flex-shrink: 0; fill: #000000; }
 
+  /* CHART STAT BAR */
+  .chart-stat-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 7px 0 9px;
+    border-bottom: 1px solid var(--line-soft);
+    margin-bottom: 0;
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    color: var(--ink-faint);
+  }
+  .csr-period {
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+  }
+  .csr-value {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--ink);
+    letter-spacing: 0;
+  }
+  .csr-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 2px;
+    letter-spacing: 0.3px;
+  }
+  .csr-change.up   { color: #059669; background: rgba(5,150,105,0.08); }
+  .csr-change.down { color: #dc2626; background: rgba(220,38,38,0.08); }
+  .csr-change.flat { color: var(--ink-faint); background: var(--line-soft); }
+  .csr-pct-lbl {
+    font-size: 9px;
+    color: var(--ink-faint);
+    letter-spacing: 0.5px;
+  }
+
+  /* SUPPLY KPI CARDS */
+  .supply-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    margin-top: 32px;
+    margin-bottom: 1px;
+  }
+  .supply-kpi {
+    background: var(--white);
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .supply-kpi-label {
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+  }
+  .supply-kpi-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.1;
+  }
+  .supply-kpi-sub {
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    color: var(--ink-faint);
+  }
+  .supply-kpi-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 2px;
+    width: fit-content;
+    margin-top: 2px;
+  }
+  .supply-kpi-change.up   { color: #059669; background: rgba(5,150,105,0.08); }
+  .supply-kpi-change.down { color: #dc2626; background: rgba(220,38,38,0.08); }
+  .supply-kpi-change.flat { color: var(--ink-faint); background: var(--line-soft); }
+  @media (max-width: 760px) {
+    .supply-kpis { grid-template-columns: repeat(2, 1fr); }
+  }
+
   /* COMING SOON */
   .coming-soon-card {
     display: flex;
@@ -1021,7 +1120,7 @@
     <div class="stat-value">Base<span class="unit">L2 / OP STACK</span></div>
   </div>
   <div class="stat">
-    <div class="stat-label">AGGREGATE MCAP</div>
+    <div class="stat-label">AGGREGATE SUPPLY</div>
     <div class="stat-value" id="aggMcapVal">—<span class="unit">LOADING</span></div>
   </div>
 </section>
@@ -1056,6 +1155,30 @@
   <div class="regions">
     <h3>// REGISTRY · 21 REGIONS</h3>
     <div class="region-grid" id="regionGrid"></div>
+  </div>
+
+  <div class="supply-kpis" id="supplyKpis">
+    <div class="supply-kpi">
+      <div class="supply-kpi-label" id="supKpiTotalLabel">TOTAL SUPPLY</div>
+      <div class="supply-kpi-value" id="supKpiTotal">—</div>
+      <div class="supply-kpi-sub" id="supKpiTotalSub">END OF QUARTER</div>
+      <div class="supply-kpi-change flat" id="supKpiTotalChg">—</div>
+    </div>
+    <div class="supply-kpi">
+      <div class="supply-kpi-label">LARGEST REGION</div>
+      <div class="supply-kpi-value" id="supKpiRegion">—</div>
+      <div class="supply-kpi-sub" id="supKpiRegionSub">—</div>
+    </div>
+    <div class="supply-kpi">
+      <div class="supply-kpi-label">TOP PROJECT</div>
+      <div class="supply-kpi-value" id="supKpiTop">—</div>
+      <div class="supply-kpi-sub" id="supKpiTopSub">—</div>
+    </div>
+    <div class="supply-kpi">
+      <div class="supply-kpi-label">PROJECTS TRACKED</div>
+      <div class="supply-kpi-value" id="supKpiProjects">—</div>
+      <div class="supply-kpi-sub">WITH REAL SUPPLY DATA</div>
+    </div>
   </div>
 
   <div class="supply-history-wrap">
@@ -1208,7 +1331,7 @@
   </div>
   <div class="ds-charts c1">
     <div class="ds-chart-card">
-      <div class="ds-chart-lbl">// DAILY TRANSACTING ADDRESSES BY PROJECT</div>
+      <div class="ds-chart-lbl">// TRANSACTING ADDRESSES BY PROJECT</div>
       <div class="ds-chart-body"><canvas id="chart-wallets"></canvas></div>
     </div>
   </div>
@@ -1623,6 +1746,73 @@ if (document.readyState === "loading") {
   Chart.defaults.plugins.tooltip.footerFont          = { family:"'Inter Tight',sans-serif", weight:'700', size:11 };
   Chart.defaults.plugins.tooltip.footerMarginTop     = 8;
 
+  /* ── Shared tooltip factory with "Others" clustering ──────────────
+     makeTT(fmtVal, opts) returns { itemSort, callbacks } ready to drop
+     into any chart's tooltip options.
+     opts:
+       max      – max items shown individually before collapsing (default 8)
+       useX     – use parsed.x instead of parsed.y (indexAxis:'y' charts)
+       footer   – 'total' | 'avg' | 'max-dev' | false
+       fmtTotal – override format function for the Total line
+  ─────────────────────────────────────────────────────────────────── */
+  function _fmtMil(v) {
+    return v >= 1000 ? `$${(v/1000).toFixed(2)}B`
+         : v >= 1   ? `$${v.toFixed(2)}M`
+         :             `$${(v*1000).toFixed(0)}K`;
+  }
+  function _fmtCnt(v) {
+    return v >= 1e6  ? `${(v/1e6).toFixed(2)}M`
+         : v >= 1000 ? `${(v/1000).toFixed(1)}K`
+         :              Math.round(v).toLocaleString();
+  }
+
+  function makeTT(fmtVal, opts = {}) {
+    const MAX        = opts.max     ?? 8;
+    const useX       = opts.useX    ?? false;
+    const footerMode = opts.footer  ?? 'total';
+    const fmtTot     = opts.fmtTotal ?? fmtVal;
+    /* cluster:true  → collapse items beyond MAX into "+ N others"  (line charts)
+       cluster:false → show all items, just sort + total             (stacked bar with pre-built Others) */
+    const cluster    = opts.cluster ?? true;
+    let _sorted = [], _total = 0;
+    const gv = i => useX ? (i.parsed.x || 0) : (i.parsed.y || 0);
+    return {
+      itemSort: (a, b) => gv(b) - gv(a),
+      callbacks: {
+        beforeBody: items => {
+          _sorted = items.filter(i => gv(i) > 0)
+                        .sort((a, b) => gv(b) - gv(a));
+          _total  = _sorted.reduce((s, i) => s + gv(i), 0);
+        },
+        label: ctx => {
+          const v = gv(ctx);
+          if (!v || v <= 0) return null;
+          if (cluster) {
+            const rank = _sorted.findIndex(i => i.datasetIndex === ctx.datasetIndex);
+            if (rank < 0 || rank >= MAX) return null;
+          }
+          return `${ctx.dataset.label}: ${fmtVal(v)}`;
+        },
+        footer: () => {
+          if (!_sorted.length) return [];
+          const lines = [];
+          if (cluster) {
+            const shownT  = _sorted.slice(0, MAX).reduce((s, i) => s + gv(i), 0);
+            const hidden  = _sorted.length - Math.min(_sorted.length, MAX);
+            const hiddenT = _total - shownT;
+            if (hidden > 0 && hiddenT > 0.00001)
+              lines.push(`+ ${hidden} others: ${fmtVal(hiddenT)}`);
+          }
+          if (footerMode === 'total' && _total > 0)
+            lines.push(`Total: ${fmtTot(_total)}`);
+          else if (footerMode === 'avg' && _sorted.length > 0)
+            lines.push(`Avg: ${fmtVal(_total / _sorted.length)}`);
+          return lines;
+        }
+      }
+    };
+  }
+
   /* ── Constants ── */
   const TOTAL = 730;
   const EPOCH = new Date(2024, 4, 12); // May 12 2024
@@ -1764,19 +1954,36 @@ if (document.readyState === "loading") {
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{
         legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:12 } },
-        tooltip:{ mode:'index', intersect:false, callbacks:{
-          label: ctx => {
-            const v = ctx.parsed.y;
-            const dev = ((v - 1) * 100);
-            const sign = dev >= 0 ? '+' : '';
-            return `${ctx.dataset.label}: ${v.toFixed(4)} (${sign}${dev.toFixed(2)}%)`;
-          },
-          footer: items => {
-            const devs = items.map(i => Math.abs((i.parsed.y - 1)*100));
-            const max = Math.max(...devs);
-            return `Max deviation: ${max.toFixed(2)}%`;
-          },
-        }},
+        tooltip: (() => {
+          const PEG_MAX = 10;
+          let _pegSorted = [];
+          return { mode:'index', intersect:false,
+            itemSort: (a,b) => Math.abs((b.parsed.y||1)-1) - Math.abs((a.parsed.y||1)-1),
+            callbacks: {
+              beforeBody: items => {
+                _pegSorted = items
+                  .filter(i => i.parsed.y != null)
+                  .sort((a,b) => Math.abs((b.parsed.y||1)-1) - Math.abs((a.parsed.y||1)-1));
+              },
+              label: ctx => {
+                const v = ctx.parsed.y;
+                if (v == null) return null;
+                const rank = _pegSorted.findIndex(i => i.datasetIndex === ctx.datasetIndex);
+                if (rank < 0 || rank >= PEG_MAX) return null;
+                const dev = (v-1)*100, sign = dev>=0?'+':'';
+                return `${ctx.dataset.label}: ${v.toFixed(4)} (${sign}${dev.toFixed(2)}%)`;
+              },
+              footer: items => {
+                const lines = [];
+                const hidden = _pegSorted.length - Math.min(_pegSorted.length, PEG_MAX);
+                if (hidden > 0) lines.push(`+ ${hidden} others not shown`);
+                const devs = _pegSorted.map(i => Math.abs((i.parsed.y-1)*100));
+                if (devs.length) lines.push(`Max deviation: ${Math.max(...devs).toFixed(2)}%`);
+                return lines;
+              }
+            }
+          };
+        })(),
         annotation: { annotations: { pegLine: { type:'line', yMin:1, yMax:1, borderColor:'rgba(0,0,255,0.25)', borderWidth:1, borderDash:[4,4] } } },
       },
       scales:{
@@ -1809,26 +2016,7 @@ if (document.readyState === "loading") {
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{
         legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10 } },
-        tooltip:{ mode:'index', intersect:false,
-          itemSort: (a, b) => (b.parsed.y || 0) - (a.parsed.y || 0),
-          callbacks:{
-          label: ctx => {
-            const v = ctx.parsed.y;
-            if (v == null || v < 0.00001) return null;
-            const fmt = v >= 1000 ? `$${(v/1000).toFixed(2)}B`
-                      : v >= 1    ? `$${v.toFixed(4)}M`
-                      :             `$${(v*1000).toFixed(2)}K`;
-            return `${ctx.dataset.label}: ${fmt}`;
-          },
-          footer: items => {
-            const total = items.reduce((s,i)=>s+(i.parsed.y||0),0);
-            if (!total) return '';
-            const fmt = total >= 1000 ? `$${(total/1000).toFixed(2)}B`
-                      : total >= 1    ? `$${total.toFixed(2)}M`
-                      :                 `$${(total*1000).toFixed(2)}K`;
-            return `Total: ${fmt}`;
-          }
-        }}
+        tooltip:{ mode:'index', intersect:false, ...makeTT(_fmtMil, { cluster:false }) }
       },
       scales:{
         x:{ stacked:true, grid:{display:false}, ticks:{maxTicksLimit:8, font:{family:"'Inter Tight',sans-serif",size:9}} },
@@ -1850,20 +2038,7 @@ if (document.readyState === "loading") {
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{
         legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10 } },
-        tooltip:{ mode:'index', intersect:false,
-          itemSort:(a,b)=>(b.parsed.y||0)-(a.parsed.y||0),
-          callbacks:{
-            label: ctx => {
-              const v = ctx.parsed.y;
-              if (v == null || v < 1) return null;
-              return `${ctx.dataset.label}: ${v >= 1000 ? (v/1000).toFixed(1)+'K' : v.toFixed(0)}`;
-            },
-            footer: items => {
-              const t = items.reduce((s,i)=>s+(i.parsed.y||0),0);
-              return t > 0 ? `Total: ${t >= 1000 ? (t/1000).toFixed(1)+'K' : t.toFixed(0)}` : '';
-            }
-          }
-        }
+        tooltip:{ mode:'index', intersect:false, ...makeTT(_fmtCnt, { cluster:false }) }
       },
       scales:{
         x:{ stacked:true, grid:{display:false}, ticks:{maxTicksLimit:8, font:{family:"'Inter Tight',sans-serif",size:9}} },
@@ -1879,21 +2054,7 @@ if (document.readyState === "loading") {
       plugins:{
         legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10 } },
         tooltip:{ mode:'index', intersect:false,
-          itemSort:(a,b)=>(b.parsed.y||0)-(a.parsed.y||0),
-          callbacks:{
-            label: ctx => {
-              const v = ctx.parsed.y;
-              if (v == null || v < 0.01) return null;
-              return `${ctx.dataset.label}: ${v.toFixed(1)}×`;
-            },
-            footer: items => {
-              const vals = items.filter(i=>(i.parsed.y||0)>0);
-              if (!vals.length) return '';
-              const avg = vals.reduce((s,i)=>s+(i.parsed.y||0),0)/vals.length;
-              return `Avg: ${avg.toFixed(1)}×`;
-            }
-          }
-        }
+          ...makeTT(v => `${v.toFixed(1)}×`, { max:10, footer:'avg' }) }
       },
       scales:{ x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{family:"'Inter Tight',sans-serif",size:9}}},
                y:{grid:{color:'rgba(216,221,229,0.4)'},ticks:{callback:v=>`${v}×`,font:{family:"'Inter Tight',sans-serif",size:9}}} } }
@@ -1912,27 +2073,7 @@ if (document.readyState === "loading") {
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{
         legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10 } },
-        tooltip:{ mode:'index', intersect:false,
-          itemSort:(a,b)=>(b.parsed.y||0)-(a.parsed.y||0),
-          callbacks:{
-            label: ctx => {
-              const v = ctx.parsed.y;
-              if (v == null || v < 0.00001) return null;
-              const fmt = v >= 1000 ? `$${(v/1000).toFixed(2)}B`
-                        : v >= 1    ? `$${v.toFixed(2)}M`
-                        :             `$${(v*1000).toFixed(0)}K`;
-              return `${ctx.dataset.label}: ${fmt}`;
-            },
-            footer: items => {
-              const total = items.reduce((s,i)=>s+(i.parsed.y||0),0);
-              if (!total) return '';
-              const fmt = total >= 1000 ? `$${(total/1000).toFixed(2)}B`
-                        : total >= 1    ? `$${total.toFixed(2)}M`
-                        :                 `$${(total*1000).toFixed(0)}K`;
-              return `Total: ${fmt}`;
-            }
-          }
-        }
+        tooltip:{ mode:'index', intersect:false, ...makeTT(_fmtMil, { cluster:false }) }
       },
       scales:{
         x:{ stacked:true, grid:{display:false}, ticks:{maxTicksLimit:8, font:{family:"'Inter Tight',sans-serif",size:9}} },
@@ -1954,20 +2095,7 @@ if (document.readyState === "loading") {
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{
         legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10 } },
-        tooltip:{ mode:'index', intersect:false,
-          itemSort:(a,b)=>(b.parsed.y||0)-(a.parsed.y||0),
-          callbacks:{
-            label: ctx => {
-              const v = ctx.parsed.y;
-              if (v == null || v < 1) return null;
-              return `${ctx.dataset.label}: ${v >= 1000 ? (v/1000).toFixed(1)+'K' : v.toFixed(0)}`;
-            },
-            footer: items => {
-              const t = items.reduce((s,i)=>s+(i.parsed.y||0),0);
-              return t > 0 ? `Total: ${t >= 1000 ? (t/1000).toFixed(1)+'K' : t.toFixed(0)}` : '';
-            }
-          }
-        }
+        tooltip:{ mode:'index', intersect:false, ...makeTT(_fmtCnt, { cluster:false }) }
       },
       scales:{
         x:{ stacked:true, grid:{display:false}, ticks:{maxTicksLimit:8, font:{family:"'Inter Tight',sans-serif",size:9}} },
@@ -1986,20 +2114,7 @@ if (document.readyState === "loading") {
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{
         legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10 } },
-        tooltip:{ mode:'index', intersect:false,
-          itemSort:(a,b)=>(b.parsed.y||0)-(a.parsed.y||0),
-          callbacks:{
-            label: ctx => {
-              const v = ctx.parsed.y;
-              if (v == null || v < 1) return null;
-              return `${ctx.dataset.label}: ${v >= 1000 ? (v/1000).toFixed(1)+'K' : v.toFixed(0)}`;
-            },
-            footer: items => {
-              const t = items.reduce((s,i)=>s+(i.parsed.y||0),0);
-              return t > 0 ? `Total: ${t >= 1000 ? (t/1000).toFixed(1)+'K' : t.toFixed(0)}` : '';
-            }
-          }
-        }
+        tooltip:{ mode:'index', intersect:false, ...makeTT(_fmtCnt, { max:10 }) }
       },
       scales:{
         x:{ grid:{display:false}, ticks:{maxTicksLimit:8, font:{family:"'Inter Tight',sans-serif",size:9}} },
@@ -2029,19 +2144,7 @@ if (document.readyState === "loading") {
       plugins:{
         legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10 } },
         tooltip:{ mode:'index', intersect:false,
-          itemSort:(a,b)=>(b.parsed.x||0)-(a.parsed.x||0),
-          callbacks:{
-            label: ctx => {
-              const v = ctx.parsed.x;
-              if (!v) return null;
-              return `${ctx.dataset.label}: ${v >= 1000 ? (v/1000).toFixed(1)+'K' : v}`;
-            },
-            footer: items => {
-              const t = items.reduce((s,i)=>s+(i.parsed.x||0),0);
-              return t > 0 ? `Total: ${t >= 1000 ? (t/1000).toFixed(1)+'K' : t}` : '';
-            }
-          }
-        }
+          ...makeTT(_fmtCnt, { useX:true, max:4, cluster:false }) }
       },
       scales:{
         y:{ stacked:true, grid:{display:false}, ticks:{font:{family:"'Inter Tight',sans-serif",size:9}} },
@@ -2058,15 +2161,56 @@ if (document.readyState === "loading") {
 
   const states = {}; // keyed by chart id
 
-  /* Build time-bucketed indices for a given state */
+  /* Build time-bucketed indices for a given state.
+     groupBy 1 / 7  → fixed-width buckets.
+     groupBy 30/90/365 → calendar-aligned months / quarters / years,
+     so "Q1'26" always means Jan 1 – Mar 31 and "Apr '26" means Apr 1 – Apr 30. */
   function buildBucketsFor(st) {
+    const g = st.groupBy, s = st.start, e = st.end;
+
+    if (g === 1 || g === 7) {
+      const buckets = [];
+      for (let i = s; i <= e; i += g)
+        buckets.push({ from: i, to: Math.min(i + g - 1, e) });
+      return buckets;
+    }
+
     const buckets = [];
-    for (let i = st.start; i <= st.end; i += st.groupBy)
-      buckets.push({ from: i, to: Math.min(i + st.groupBy - 1, st.end) });
+    const startDate = new Date(EPOCH); startDate.setDate(startDate.getDate() + s);
+
+    if (g === 30) {
+      let yr = startDate.getFullYear(), mo = startDate.getMonth();
+      while (true) {
+        const from = Math.round((new Date(yr, mo, 1)     - EPOCH) / 86400000);
+        const to   = Math.round((new Date(yr, mo + 1, 0) - EPOCH) / 86400000);
+        if (from > e) break;
+        buckets.push({ from: Math.max(from, s), to: Math.min(to, e) });
+        if (++mo > 11) { mo = 0; yr++; }
+      }
+    } else if (g === 90) {
+      let yr = startDate.getFullYear(), q = Math.floor(startDate.getMonth() / 3);
+      while (true) {
+        const from = Math.round((new Date(yr, q * 3, 1)     - EPOCH) / 86400000);
+        const to   = Math.round((new Date(yr, q * 3 + 3, 0) - EPOCH) / 86400000);
+        if (from > e) break;
+        buckets.push({ from: Math.max(from, s), to: Math.min(to, e) });
+        if (++q > 3) { q = 0; yr++; }
+      }
+    } else if (g === 365) {
+      let yr = startDate.getFullYear();
+      while (true) {
+        const from = Math.round((new Date(yr, 0, 1)  - EPOCH) / 86400000);
+        const to   = Math.round((new Date(yr, 11, 31) - EPOCH) / 86400000);
+        if (from > e) break;
+        buckets.push({ from: Math.max(from, s), to: Math.min(to, e) });
+        yr++;
+      }
+    }
+
     return buckets;
   }
 
-  /* Smart x-axis label based on groupBy */
+  /* Smart x-axis label — uses bucket's first day to derive period name */
   function bucketLabelFor(from, groupBy) {
     const d  = new Date(EPOCH); d.setDate(d.getDate() + from);
     const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -2081,6 +2225,235 @@ if (document.readyState === "loading") {
   function fmtDay(i) {
     const d = new Date(EPOCH); d.setDate(d.getDate() + i);
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  /* ── Stat bar helpers ── */
+
+  /* Convert calendar date to 0-based day index from EPOCH (May 12 2024) */
+  function _dateToIdx(year, month, day) {
+    const d = new Date(year, month - 1, day);
+    return Math.round((d - EPOCH) / 86400000);
+  }
+
+  /* Return { curr, prev } index ranges for the last two COMPLETE periods
+     given the currently-selected groupBy.
+     "Complete" means periods that have already ended (not the running period). */
+  function getCompPeriods(groupBy) {
+    const today = new Date();
+    const todayIdx = Math.min(Math.round((today - EPOCH) / 86400000), TOTAL - 1);
+
+    if (groupBy === 1) {
+      const yestIdx = todayIdx - 1;
+      if (yestIdx < 1) return null;
+      return { curr: { from: yestIdx, to: yestIdx }, prev: { from: yestIdx - 1, to: yestIdx - 1 } };
+    }
+
+    if (groupBy === 7) {
+      /* Two most-recent complete 7-day buckets aligned to chart's day-0 origin */
+      const allBuckets = [];
+      for (let i = 0; i < TOTAL; i += 7)
+        allBuckets.push({ from: i, to: Math.min(i + 6, TOTAL - 1) });
+      const complete = allBuckets.filter(b => b.to < todayIdx);
+      if (complete.length < 2) return null;
+      return { curr: complete[complete.length - 1], prev: complete[complete.length - 2] };
+    }
+
+    if (groupBy === 30) {
+      /* Two most-recent complete calendar months */
+      const y = today.getFullYear(), m = today.getMonth();
+      const periods = [];
+      for (let offset = 1; offset <= 3; offset++) {
+        let mm = m - offset, yy = y;
+        if (mm < 0) { mm += 12; yy--; }
+        const from = Math.round((new Date(yy, mm, 1)      - EPOCH) / 86400000);
+        const to   = Math.round((new Date(yy, mm + 1, 0)  - EPOCH) / 86400000);
+        if (to < todayIdx && from >= 0) periods.push({ from: Math.max(from, 0), to: Math.min(to, TOTAL - 1) });
+      }
+      if (periods.length < 2) return null;
+      return { curr: periods[0], prev: periods[1] };
+    }
+
+    if (groupBy === 90) {
+      /* Two most-recent complete calendar quarters (Q end = Mar 31, Jun 30, Sep 30, Dec 31) */
+      const quarters = [];
+      for (let yr = 2024; yr <= 2026; yr++) {
+        for (let q = 0; q < 4; q++) {
+          const from = Math.round((new Date(yr, q * 3, 1)     - EPOCH) / 86400000);
+          const to   = Math.round((new Date(yr, q * 3 + 3, 0) - EPOCH) / 86400000);
+          if (to < todayIdx && from >= 0)
+            quarters.push({ from: Math.max(from, 0), to: Math.min(to, TOTAL - 1) });
+        }
+      }
+      if (quarters.length < 2) return null;
+      return { curr: quarters[quarters.length - 1], prev: quarters[quarters.length - 2] };
+    }
+
+    if (groupBy === 365) {
+      /* Two most-recent complete calendar years */
+      const yr = today.getFullYear();
+      const c = { from: Math.round((new Date(yr - 1, 0, 1)  - EPOCH) / 86400000),
+                  to:   Math.round((new Date(yr - 1, 11, 31) - EPOCH) / 86400000) };
+      const p = { from: Math.round((new Date(yr - 2, 0, 1)  - EPOCH) / 86400000),
+                  to:   Math.round((new Date(yr - 2, 11, 31) - EPOCH) / 86400000) };
+      if (c.to >= todayIdx) return null;
+      return { curr: c, prev: p };
+    }
+
+    return null;
+  }
+
+  /* Period label for stat bar display */
+  function _periodLabel(groupBy, range) {
+    if (!range) return '';
+    const d = new Date(EPOCH); d.setDate(d.getDate() + range.from);
+    const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const yy = String(d.getFullYear()).slice(2);
+    if (groupBy === 1)   return `${mo[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+    if (groupBy === 7)   return `Wk ${mo[d.getMonth()]} ${d.getDate()}`;
+    if (groupBy === 30)  return `${mo[d.getMonth()]} '${yy}`;
+    if (groupBy === 90)  return `Q${Math.floor(d.getMonth()/3)+1} '${yy}`;
+    if (groupBy === 365) return `${d.getFullYear()}`;
+    return '';
+  }
+
+  /* Sum over an index range, treating null/undefined as 0 */
+  function _statSum(data, from, to) {
+    let s = 0;
+    for (let i = Math.max(from, 0); i <= Math.min(to, TOTAL - 1); i++) s += (data[i] || 0);
+    return s;
+  }
+
+  /* Last non-null value in range */
+  function _statLast(data, from, to) {
+    for (let i = Math.min(to, TOTAL - 1); i >= Math.max(from, 0); i--) {
+      if (data[i] != null) return data[i];
+    }
+    return null;
+  }
+
+  /* Render stat bar for one chart */
+  function renderChartStat(id) {
+    const st = states[id]; if (!st || !st.statEl) return;
+    const el  = st.statEl;
+    const gb  = st.groupBy;
+    const per = getCompPeriods(gb);
+    if (!per) { el.style.display = 'none'; return; }
+    el.style.display = 'flex';
+
+    /* Determine chart data type and source */
+    let currVal = null, prevVal = null;
+    const isFlow     = ['chart-volume','chart-txns','chart-dex','chart-wallets'].includes(id);
+    const isSnapshot = ['chart-holders','chart-supply-history','chart-supply-symbol'].includes(id);
+
+    if (id === 'chart-volume') {
+      const allArr = Array.from({length:TOTAL}, (_,i) =>
+        VOL_ALL_SYMS.reduce((s,sym) => s + (REAL_VOL[sym]?.[i]||0), 0));
+      currVal = _statSum(allArr, per.curr.from, per.curr.to);
+      prevVal = _statSum(allArr, per.prev.from, per.prev.to);
+    } else if (id === 'chart-txns') {
+      const allArr = Array.from({length:TOTAL}, (_,i) =>
+        (typeof REAL_TXN !== 'undefined' ? Object.keys(REAL_TXN).reduce((s,sym)=>s+(REAL_TXN[sym]?.[i]||0),0) : 0));
+      currVal = _statSum(allArr, per.curr.from, per.curr.to);
+      prevVal = _statSum(allArr, per.prev.from, per.prev.to);
+    } else if (id === 'chart-dex') {
+      const allArr = Array.from({length:TOTAL}, (_,i) =>
+        DEX_ALL_SYMS.reduce((s,sym) => s + (REAL_DEX[sym]?.[i]||0), 0));
+      currVal = _statSum(allArr, per.curr.from, per.curr.to);
+      prevVal = _statSum(allArr, per.prev.from, per.prev.to);
+    } else if (id === 'chart-wallets') {
+      const allArr = Array.from({length:TOTAL}, (_,i) =>
+        (typeof REAL_WAL !== 'undefined' ? Object.keys(REAL_WAL).reduce((s,sym)=>s+(REAL_WAL[sym]?.[i]||0),0) : 0));
+      currVal = _statSum(allArr, per.curr.from, per.curr.to);
+      prevVal = _statSum(allArr, per.prev.from, per.prev.to);
+    } else if (id === 'chart-holders') {
+      const allArr = Array.from({length:TOTAL}, (_,i) =>
+        (typeof REAL_HOLDERS !== 'undefined' ? Object.keys(REAL_HOLDERS).reduce((s,sym)=>s+(REAL_HOLDERS[sym]?.[i]||0),0) : 0));
+      currVal = _statLast(allArr, per.curr.from, per.curr.to);
+      prevVal = _statLast(allArr, per.prev.from, per.prev.to);
+    } else if (id === 'chart-supply-history') {
+      const allArr = Array.from({length:TOTAL}, (_,i) =>
+        REGION_NAMES.reduce((s,r) => s + (REGION_SUPPLY[r]?.[i]||0), 0));
+      currVal = _statLast(allArr, per.curr.from, per.curr.to);
+      prevVal = _statLast(allArr, per.prev.from, per.prev.to);
+    } else if (id === 'chart-supply-symbol') {
+      const allArr = Array.from({length:TOTAL}, (_,i) =>
+        Object.keys(_mcap).reduce((s,sym) => s + (_mcap[sym]?.[i]||0), 0));
+      currVal = _statLast(allArr, per.curr.from, per.curr.to);
+      prevVal = _statLast(allArr, per.prev.from, per.prev.to);
+    } else if (id === 'chart-velocity') {
+      const vals = [];
+      for (let i = per.curr.from; i <= per.curr.to; i++) {
+        const total = Object.keys(REAL_VEL || {}).reduce((s,sym) => {
+          const v = REAL_VEL[sym]?.[i]; return s + (v != null ? v : 0);
+        }, 0);
+        const n = Object.keys(REAL_VEL || {}).filter(sym => REAL_VEL[sym]?.[i] != null).length;
+        if (n > 0) vals.push(total / n);
+      }
+      currVal = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+      const vals2 = [];
+      for (let i = per.prev.from; i <= per.prev.to; i++) {
+        const total = Object.keys(REAL_VEL || {}).reduce((s,sym) => {
+          const v = REAL_VEL[sym]?.[i]; return s + (v != null ? v : 0);
+        }, 0);
+        const n = Object.keys(REAL_VEL || {}).filter(sym => REAL_VEL[sym]?.[i] != null).length;
+        if (n > 0) vals2.push(total / n);
+      }
+      prevVal = vals2.length ? vals2.reduce((a,b)=>a+b,0)/vals2.length : null;
+    } else if (id === 'chart-peg') {
+      const vals = [];
+      for (let i = per.curr.from; i <= per.curr.to; i++) {
+        const total = Object.keys(PEG_DATA || {}).reduce((s,sym) => {
+          const v = PEG_DATA[sym]?.[i]; return s + (v != null ? v : 0);
+        }, 0);
+        const n = Object.keys(PEG_DATA || {}).filter(sym => PEG_DATA[sym]?.[i] != null).length;
+        if (n > 0) vals.push(total / n);
+      }
+      currVal = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+      const vals2 = [];
+      for (let i = per.prev.from; i <= per.prev.to; i++) {
+        const total = Object.keys(PEG_DATA || {}).reduce((s,sym) => {
+          const v = PEG_DATA[sym]?.[i]; return s + (v != null ? v : 0);
+        }, 0);
+        const n = Object.keys(PEG_DATA || {}).filter(sym => PEG_DATA[sym]?.[i] != null).length;
+        if (n > 0) vals2.push(total / n);
+      }
+      prevVal = vals2.length ? vals2.reduce((a,b)=>a+b,0)/vals2.length : null;
+    } else {
+      el.style.display = 'none'; return;
+    }
+
+    if (currVal === null) { el.style.display = 'none'; return; }
+
+    /* Format the value */
+    const periodLbl = _periodLabel(gb, per.curr);
+    let valStr = '';
+    if (id === 'chart-volume' || id === 'chart-dex' || id === 'chart-supply-history' || id === 'chart-supply-symbol') {
+      valStr = currVal >= 1000 ? '$' + (currVal/1000).toFixed(2) + 'B'
+             : currVal >= 1   ? '$' + currVal.toFixed(2) + 'M'
+             : '$' + Math.round(currVal * 1000) + 'K';
+    } else if (id === 'chart-velocity' || id === 'chart-peg') {
+      valStr = currVal.toFixed(2) + '×';
+    } else {
+      valStr = currVal >= 1e6 ? (currVal/1e6).toFixed(2) + 'M'
+             : currVal >= 1e3 ? (currVal/1e3).toFixed(1) + 'K'
+             : Math.round(currVal).toLocaleString();
+    }
+
+    /* Compute change */
+    const changeLabels = { 1: 'DoD', 7: 'WoW', 30: 'MoM', 90: 'QoQ', 365: 'YoY' };
+    let chgHtml = '';
+    if (prevVal != null && prevVal > 0) {
+      const pct = ((currVal - prevVal) / prevVal) * 100;
+      const sign = pct > 0 ? '+' : '';
+      const cls  = pct > 0.5 ? 'up' : pct < -0.5 ? 'down' : 'flat';
+      const arrow = pct > 0.5 ? '▲' : pct < -0.5 ? '▼' : '—';
+      chgHtml = `<span class="csr-change ${cls}">${arrow} ${sign}${pct.toFixed(1)}%</span><span class="csr-pct-lbl">${changeLabels[gb] || ''}</span>`;
+    }
+
+    el.innerHTML = `
+      <span class="csr-period">${periodLbl}</span>
+      <span class="csr-value">${valStr}</span>
+      ${chgHtml}`;
   }
 
   /* Aggregation helpers bound to a buckets array */
@@ -2218,6 +2591,7 @@ if (document.readyState === "loading") {
     UPDATERS[id](ch, buckets, labels);
     ch.update('none');
     syncCardSlider(id);
+    renderChartStat(id);
   }
 
   /* Sync the fill track + date labels for one chart's slider */
@@ -2279,6 +2653,13 @@ if (document.readyState === "loading") {
     /* Insert before the chart body */
     const body = card.querySelector('.ds-chart-body');
     card.insertBefore(ctrl, body);
+
+    /* Stat bar (sits between controls and chart) */
+    const statBar = document.createElement('div');
+    statBar.className = 'chart-stat-bar';
+    statBar.style.display = 'none';
+    card.insertBefore(statBar, body);
+    st.statEl = statBar;
 
     /* Wire grouping buttons */
     st.els.btns.forEach(btn => {
@@ -2395,21 +2776,105 @@ if (document.readyState === "loading") {
     );
   });
 
+  /* ── Supply KPI population ── */
+  /* Uses calendar quarter end-dates: Q1 = Mar 31, Q4 = Dec 31, etc. */
+  (function() {
+    const todayIdx = Math.min(Math.round((new Date() - EPOCH) / 86400000), TOTAL - 1);
+
+    /* Find the two most-recent complete calendar quarters */
+    const quarters = [];
+    for (let yr = 2024; yr <= 2026; yr++) {
+      for (let q = 0; q < 4; q++) {
+        const from = Math.round((new Date(yr, q * 3, 1)     - EPOCH) / 86400000);
+        const to   = Math.round((new Date(yr, q * 3 + 3, 0) - EPOCH) / 86400000);
+        if (to < todayIdx && from >= 0)
+          quarters.push({ from: Math.max(from, 0), to: Math.min(to, TOTAL - 1) });
+      }
+    }
+    if (quarters.length < 2) return;
+    const currB = quarters[quarters.length - 1];
+    const prevB = quarters[quarters.length - 2];
+
+    /* Quarter labels — Q1 2026, Q4 2025, etc. */
+    const d0 = new Date(EPOCH); d0.setDate(d0.getDate() + currB.from);
+    const d1 = new Date(EPOCH); d1.setDate(d1.getDate() + prevB.from);
+    const currLbl = `Q${Math.floor(d0.getMonth()/3)+1} ${d0.getFullYear()}`;
+    const prevLbl = `Q${Math.floor(d1.getMonth()/3)+1} ${d1.getFullYear()}`;
+
+    /* Update the KPI header label */
+    const lblEl = document.getElementById('supKpiTotalLabel');
+    if (lblEl) lblEl.textContent = `TOTAL SUPPLY (${currLbl.toUpperCase()})`;
+
+    const allArr = Array.from({length: TOTAL}, (_, i) =>
+      REGION_NAMES.reduce((s, r) => s + (REGION_SUPPLY[r]?.[i] || 0), 0));
+
+    /* Snapshot at the last day of each calendar quarter */
+    const currVal = _statLast(allArr, currB.from, currB.to);
+    const prevVal = _statLast(allArr, prevB.from, prevB.to);
+
+    /* Total supply */
+    const totalEl = document.getElementById('supKpiTotal');
+    const subEl   = document.getElementById('supKpiTotalSub');
+    const chgEl   = document.getElementById('supKpiTotalChg');
+    if (totalEl && currVal != null) {
+      const fmt = currVal >= 1000 ? '$' + (currVal/1000).toFixed(2) + 'B'
+                : currVal >= 1   ? '$' + currVal.toFixed(1) + 'M'
+                : '$' + Math.round(currVal * 1000) + 'K';
+      totalEl.textContent = fmt;
+    }
+    if (subEl) subEl.textContent = `END OF ${currLbl.toUpperCase()}`;
+    if (chgEl && currVal != null && prevVal != null && prevVal > 0) {
+      const pct = ((currVal - prevVal) / prevVal) * 100;
+      const sign = pct > 0 ? '+' : '';
+      const cls  = pct > 0.5 ? 'supply-kpi-change up' : pct < -0.5 ? 'supply-kpi-change down' : 'supply-kpi-change flat';
+      const arrow = pct > 0.5 ? '▲' : pct < -0.5 ? '▼' : '—';
+      chgEl.className = cls;
+      chgEl.textContent = `${arrow} ${sign}${pct.toFixed(1)}% vs ${prevLbl}`;
+    }
+
+    /* Largest region by end of curr bucket */
+    const regionEl    = document.getElementById('supKpiRegion');
+    const regionSubEl = document.getElementById('supKpiRegionSub');
+    if (regionEl) {
+      const regionVals = REGION_NAMES.map(r => ({
+        name: r,
+        val: _statLast(REGION_SUPPLY[r], currB.from, currB.to) || 0
+      })).sort((a, b) => b.val - a.val);
+      if (regionVals.length) {
+        regionEl.textContent = regionVals[0].name;
+        const v = regionVals[0].val;
+        const fmt = v >= 1000 ? '$' + (v/1000).toFixed(2) + 'B'
+                  : v >= 1   ? '$' + v.toFixed(1) + 'M'
+                  : '$' + Math.round(v * 1000) + 'K';
+        if (regionSubEl) regionSubEl.textContent = fmt + ' END ' + currLbl.toUpperCase();
+      }
+    }
+
+    /* Top project by end of curr bucket */
+    const topEl    = document.getElementById('supKpiTop');
+    const topSubEl = document.getElementById('supKpiTopSub');
+    if (topEl && Object.keys(_mcap).length) {
+      const symVals = Object.keys(_mcap).map(sym => ({
+        sym,
+        val: _statLast(_mcap[sym], currB.from, currB.to) || 0
+      })).sort((a, b) => b.val - a.val);
+      if (symVals.length) {
+        topEl.textContent = symVals[0].sym;
+        const v = symVals[0].val;
+        const fmt = v >= 1000 ? '$' + (v/1000).toFixed(2) + 'B'
+                  : v >= 1   ? '$' + v.toFixed(1) + 'M'
+                  : '$' + Math.round(v * 1000) + 'K';
+        if (topSubEl) topSubEl.textContent = fmt + ' END ' + currLbl.toUpperCase();
+      }
+    }
+
+    /* Projects tracked */
+    const projEl = document.getElementById('supKpiProjects');
+    if (projEl) projEl.textContent = Object.keys(_mcap).filter(s => _mcap[s].some(v => v > 0)).length;
+  })();
+
   function supplyTooltipCallbacks() {
-    return {
-      label: ctx => {
-        const v = ctx.parsed.y;
-        if (!v || v < 0.0001) return null;
-        const fmt = v >= 1 ? `$${v.toFixed(2)}M` : `$${Math.round(v * 1000)}K`;
-        return `${ctx.dataset.label}: ${fmt}`;
-      },
-      footer: items => {
-        const total = items.reduce((s, i) => s + (i.parsed.y || 0), 0);
-        if (!total) return '';
-        const fmt = total >= 1 ? `$${total.toFixed(2)}M` : `$${Math.round(total * 1000)}K`;
-        return `Total: ${fmt}`;
-      },
-    };
+    return makeTT(_fmtMil, { max:12 }).callbacks;
   }
 
   mk('chart-supply-history', {
@@ -2430,7 +2895,7 @@ if (document.readyState === "loading") {
           position: 'bottom',
           labels: { font: { family:"'Inter Tight',sans-serif", size: 9 }, boxWidth: 10, padding: 14, color: '#666' },
         },
-        tooltip: { mode: 'index', callbacks: supplyTooltipCallbacks() },
+        tooltip: { mode: 'index', ...makeTT(_fmtMil, { max:6, cluster:false }) },
       },
       scales: {
         x: {
@@ -2466,7 +2931,7 @@ if (document.readyState === "loading") {
     IDRX:'#164e63', THBT:'#0e7490', MYRC:'#06b6d4',  XSGD:'#22d3ee',
     CNGN:'#78350f', NGNC:'#b45309', ZARP:'#d97706',  UGXC:'#fbbf24', 'nTZS':'#fde68a',
     NZDD:'#365314', AUDD:'#4d7c0f', AUDF:'#84cc16',
-    CADC:'#6d28d9',
+    CADC:'#6d28d9', YTRYB:'#7dd3fc',
   };
   /* Sort symbols by latest supply descending so legend = largest → smallest */
   const ALL_SYMS = Object.keys(SYM_COLOR_MAP).sort((a, b) => {
@@ -2505,7 +2970,7 @@ if (document.readyState === "loading") {
           position: 'bottom',
           labels: { font: { family:"'Inter Tight',sans-serif", size: 9 }, boxWidth: 10, padding: 12, color: '#555' },
         },
-        tooltip: { mode: 'index', callbacks: supplyTooltipCallbacks() },
+        tooltip: { mode: 'index', ...makeTT(_fmtMil, { max:12, cluster:false }) },
       },
       scales: {
         x: {
@@ -2758,7 +3223,7 @@ if (document.readyState === "loading") {
     document.getElementById('holKpiTotal').innerHTML  = fmtH(totalHolders);
     document.getElementById('holKpiTop').textContent  = topTok || '—';
     document.getElementById('holKpiTopSub').textContent = topTok ? latestHolders[topTok].toLocaleString()+' HOLDERS' : '—';
-    document.getElementById('holKpiCount').textContent = HOL_ALL_SYMS.length;
+    document.getElementById('holKpiCount').textContent = Object.keys(latestHolders).length;
   }
 
   /* DEX chart defaults to data window and populates KPIs */
