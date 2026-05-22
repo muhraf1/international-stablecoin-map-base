@@ -888,6 +888,14 @@
     border-radius: 2px;
   }
   .chart-dl-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-tint); }
+  .chart-csv-btn {
+    width: auto;
+    padding: 0 6px;
+    margin-left: 4px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
   .ds-chart-lbl { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .ds-chart-lbl-text { flex: 1; }
 
@@ -1266,7 +1274,7 @@
   <div class="ds-header">
     <p class="ds-cluster">// FLOW</p>
     <h2 class="ds-title">Velocity</h2>
-    <p class="ds-desc">Annualised turnover rate (Transfer Volume ÷ Circulating Supply). High velocity means capital is actively circulating rather than being held — the onchain proxy for FX market liquidity depth.</p>
+    <p class="ds-desc">Turnover rate (Transfer Volume ÷ Circulating Supply at period end). Each bar uses the sum of transfer volume in the window divided by supply on the last day of that window — matching how you’d read volume and supply on the other charts. Daily view is annualised (×365); longer windows show that period’s multiple.</p>
   </div>
   <div class="ds-kpis">
     <div class="ds-kpi"><div class="ds-kpi-label">AVG VELOCITY (30D)</div><div class="ds-kpi-val" id="velKpiAvg">—</div><div class="ds-kpi-sub flat" id="velKpiAvgSub">—</div></div>
@@ -1276,7 +1284,7 @@
   </div>
   <div class="ds-charts c1">
     <div class="ds-chart-card">
-      <div class="ds-chart-lbl">// VELOCITY BY PROJECT (ANNUALISED)</div>
+      <div class="ds-chart-lbl">// VELOCITY BY PROJECT</div>
       <div class="ds-chart-body"><canvas id="chart-velocity"></canvas></div>
     </div>
   </div>
@@ -1446,10 +1454,6 @@ const EU_INFO = { country: "European Union", region: "EUROPE", symbols: ["EURC",
 const COUNTRY_LOOKUP = { ...DATA };
 EU_MEMBERS.forEach(id => { COUNTRY_LOOKUP[id] = EU_INFO; });
 
-/* -------------------------------------------------------
-   REGION GRID
-   ------------------------------------------------------- */
-const grid = document.getElementById("regionGrid");
 const gridEntries = [
   ...Object.entries(DATA).map(([id, info]) => ({ id: parseInt(id), info })),
   { id: "EU", info: EU_INFO },
@@ -1458,7 +1462,10 @@ const gridEntries = [
 /* Compute current supply per country from real data */
 function countrySupplyStr(symbols) {
   if (typeof REAL_SUPPLY === 'undefined') return '';
-  const last = REAL_SUPPLY_DATES ? REAL_SUPPLY_DATES.length - 1 : 364;
+  const last = (typeof REAL_SUPPLY_DATES !== 'undefined' && Array.isArray(REAL_SUPPLY_DATES))
+    ? REAL_SUPPLY_DATES.length - 1
+    : Math.max(...symbols.map(sym => REAL_SUPPLY[sym]?.length || 0)) - 1;
+  if (last < 0) return '';
   const total = symbols.reduce((s, sym) => {
     const arr = REAL_SUPPLY[sym];
     const v = arr && arr[last] != null ? arr[last] : 0;
@@ -1470,23 +1477,26 @@ function countrySupplyStr(symbols) {
   return '< $1K';
 }
 
-gridEntries
-  .sort((a, b) => a.info.country.localeCompare(b.info.country))
-  .forEach(({ info }) => {
-    const cell = document.createElement("div");
-    cell.className = "region-cell";
-    cell.addEventListener("click", () => openModal(info));
-    const supply = countrySupplyStr(info.symbols);
-    cell.innerHTML = `
-      <div class="region-name">${info.country}${supply ? `<span class="region-supply">${supply}</span>` : ''}</div>
-      <div class="region-tokens">${info.symbols.map(s => `<span class="tok">${s}</span>`).join(" · ")}</div>
-    `;
-    grid.appendChild(cell);
-  });
-
-/* Update registry count dynamically */
-const registryH3 = document.querySelector('.regions h3');
-if (registryH3) registryH3.textContent = `// REGISTRY · ${gridEntries.length} REGIONS`;
+function renderRegionRegistry() {
+  const grid = document.getElementById("regionGrid");
+  if (!grid) return;
+  grid.innerHTML = "";
+  gridEntries
+    .sort((a, b) => a.info.country.localeCompare(b.info.country))
+    .forEach(({ info }) => {
+      const cell = document.createElement("div");
+      cell.className = "region-cell";
+      cell.addEventListener("click", () => openModal(info));
+      const supply = countrySupplyStr(info.symbols);
+      cell.innerHTML = `
+        <div class="region-name">${info.country}${supply ? `<span class="region-supply">${supply}</span>` : ''}</div>
+        <div class="region-tokens">${info.symbols.map(s => `<span class="tok">${s}</span>`).join(" · ")}</div>
+      `;
+      grid.appendChild(cell);
+    });
+  const registryH3 = document.querySelector('.regions h3');
+  if (registryH3) registryH3.textContent = `// REGISTRY · ${gridEntries.length} REGIONS`;
+}
 
 /* -------------------------------------------------------
    MODAL
@@ -1519,15 +1529,18 @@ mClose.addEventListener("click", closeModal);
 modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
 
 // Modal grouping buttons
-document.getElementById("mGrpBtns").addEventListener("click", e => {
-  const btn = e.target.closest(".modal-grp-btn");
-  if (!btn) return;
-  _modalGrpBy = parseInt(btn.dataset.g, 10);
-  document.querySelectorAll(".modal-grp-btn").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
-  if (_modalCurrentInfo && typeof window.renderModalChart === "function")
-    window.renderModalChart(_modalCurrentInfo.symbols, _modalGrpBy);
-});
+const mGrpBtns = document.getElementById("mGrpBtns");
+if (mGrpBtns) {
+  mGrpBtns.addEventListener("click", e => {
+    const btn = e.target.closest(".modal-grp-btn");
+    if (!btn) return;
+    _modalGrpBy = parseInt(btn.dataset.g, 10);
+    document.querySelectorAll(".modal-grp-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    if (_modalCurrentInfo && typeof window.renderModalChart === "function")
+      window.renderModalChart(_modalCurrentInfo.symbols, _modalGrpBy);
+  });
+}
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
 
 /* -------------------------------------------------------
@@ -1576,14 +1589,29 @@ async function loadTopology() {
   throw lastErr || new Error("All sources failed");
 }
 
+let _mapBuildPromise = null;
+
 async function buildMap() {
+  if (_mapBuildPromise) return _mapBuildPromise;
+  _mapBuildPromise = _buildMapInner();
+  return _mapBuildPromise;
+}
+
+async function _buildMapInner() {
+  if (!mapLoading || !document.getElementById("mapSvg")) return;
+
   // sanity check — make sure D3 + topojson actually loaded
   if (typeof d3 === "undefined" || typeof topojson === "undefined") {
     mapLoading.textContent = "// d3 or topojson script failed to load — check connection";
+    mapLoading.classList.remove("hidden");
     return;
   }
 
+  mapLoading.classList.remove("hidden");
+  mapLoading.textContent = "// loading world atlas …";
+
   const svg = d3.select("#mapSvg");
+  svg.selectAll("*").remove();
   const W = 1000, H = 500;
 
   const projection = d3.geoEquirectangular()
@@ -1607,12 +1635,22 @@ async function buildMap() {
   try {
     world = await loadTopology();
   } catch (err) {
-    mapLoading.innerHTML = `// failed to load world atlas<br><span style="color:var(--ink-faint);font-size:9px;letter-spacing:1px;">${err.message} — check network / disable adblock</span>`;
+    mapLoading.innerHTML = `// failed to load world atlas<br><span style="color:var(--ink-faint);font-size:9px;letter-spacing:1px;">${err.message} — serve over http or allow local countries-110m.json</span>`;
+    mapLoading.classList.remove("hidden");
     console.error("Topology load failed:", err);
     return;
   }
 
-  const countries = topojson.feature(world, world.objects.countries).features;
+  let countries;
+  try {
+    countries = topojson.feature(world, world.objects.countries).features;
+  } catch (err) {
+    mapLoading.innerHTML = `// invalid world atlas data<br><span style="color:var(--ink-faint);font-size:9px;letter-spacing:1px;">${err.message}</span>`;
+    mapLoading.classList.remove("hidden");
+    console.error("Topology parse failed:", err);
+    return;
+  }
+
   const g = svg.append("g");
 
   /* EU bounding box — keeps mainland + Canary Islands/Azores/Madeira,
@@ -1710,17 +1748,31 @@ async function buildMap() {
   mapLoading.classList.add("hidden");
 }
 
-// Wait for the page to settle so the CDN scripts have a moment to attach
+function initAtlasSection() {
+  try {
+    renderRegionRegistry();
+  } catch (err) {
+    console.error("Region registry failed:", err);
+  }
+  buildMap().catch(err => {
+    console.error("buildMap failed:", err);
+    if (mapLoading) {
+      mapLoading.classList.remove("hidden");
+      mapLoading.textContent = "// map failed to render — see console";
+    }
+  });
+}
+
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", buildMap);
+  document.addEventListener("DOMContentLoaded", initAtlasSection);
 } else {
-  buildMap();
+  initAtlasSection();
 }
 </script>
 
 <script>
 /* ═══════════════════════════════════════════════════
-   CHARTS  ·  730-day daily data
+   CHARTS  ·  721-day daily data
    Per-card controls injected into each .ds-chart-card
    Buttons  = grouping granularity (1D / 7D / 1M / 1Q / 1Y)
    Slider   = date window (start → end)
@@ -1814,8 +1866,8 @@ if (document.readyState === "loading") {
   }
 
   /* ── Constants ── */
-  const TOTAL = 730;
-  const EPOCH = new Date(2024, 4, 12); // May 12 2024
+  const TOTAL = 721;
+  const EPOCH = new Date(2024, 4, 22); // May 22 2024
 
   /* ── Pre-generated 730-day arrays ── */
   const C = {
@@ -1823,7 +1875,7 @@ if (document.readyState === "loading") {
     b4:'#bfdbfe', b6:'#0ea5e9', b7:'#0284c7',
     gr:'#d8dde5', gt:'rgba(0,0,255,0.07)',
   };
-  const PRICE_OFFSET = 367; // real peg data starts day 367 (2025-05-14)
+  const PRICE_OFFSET = 357; // real peg data starts day 357 (2025-05-14)
   const PEG_COLOR_MAP = {
     CADC:'#6d28d9', XSGD:'#22d3ee', AUDD:'#4d7c0f', VEUR:'#2563eb', VCHF:'#3b82f6',
     TRYB:'#0ea5e9', ZARP:'#d97706', EURAU:'#1d4ed8', CNGN:'#78350f', TGBP:'#0284c7',
@@ -1861,7 +1913,7 @@ if (document.readyState === "loading") {
     });
   });
   // ── Real transfer volume data ──
-  const VOL_OFFSET = 10; // first data day (2024-05-22 = EPOCH+10)
+  const VOL_OFFSET = 0; // first data day (2024-05-22 = EPOCH+0)
   const hasVol = typeof REAL_VOL !== 'undefined';
   // Sort symbols by total volume descending
   const VOL_ALL_SYMS = hasVol
@@ -1897,7 +1949,6 @@ if (document.readyState === "loading") {
       })
     : [];
 
-  let REAL_VEL = {}; // filled after _mcap is computed
   // ── DEX volume data (dex-data.js) ──
   const hasDexVol = typeof REAL_DEX !== 'undefined';
   const DEX_VOL_THRESHOLD = 1; // USD millions total to show individually
@@ -2229,7 +2280,7 @@ if (document.readyState === "loading") {
 
   /* ── Stat bar helpers ── */
 
-  /* Convert calendar date to 0-based day index from EPOCH (May 12 2024) */
+  /* Convert calendar date to 0-based day index from EPOCH (May 22 2024) */
   function _dateToIdx(year, month, day) {
     const d = new Date(year, month - 1, day);
     return Math.round((d - EPOCH) / 86400000);
@@ -2381,24 +2432,14 @@ if (document.readyState === "loading") {
       currVal = _statLast(allArr, per.curr.from, per.curr.to);
       prevVal = _statLast(allArr, per.prev.from, per.prev.to);
     } else if (id === 'chart-velocity') {
-      const vals = [];
-      for (let i = per.curr.from; i <= per.curr.to; i++) {
-        const total = Object.keys(REAL_VEL || {}).reduce((s,sym) => {
-          const v = REAL_VEL[sym]?.[i]; return s + (v != null ? v : 0);
-        }, 0);
-        const n = Object.keys(REAL_VEL || {}).filter(sym => REAL_VEL[sym]?.[i] != null).length;
-        if (n > 0) vals.push(total / n);
-      }
-      currVal = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
-      const vals2 = [];
-      for (let i = per.prev.from; i <= per.prev.to; i++) {
-        const total = Object.keys(REAL_VEL || {}).reduce((s,sym) => {
-          const v = REAL_VEL[sym]?.[i]; return s + (v != null ? v : 0);
-        }, 0);
-        const n = Object.keys(REAL_VEL || {}).filter(sym => REAL_VEL[sym]?.[i] != null).length;
-        if (n > 0) vals2.push(total / n);
-      }
-      prevVal = vals2.length ? vals2.reduce((a,b)=>a+b,0)/vals2.length : null;
+      const gbVel = states[id]?.groupBy ?? 30;
+      const bCurr = { from: per.curr.from, to: per.curr.to };
+      const bPrev = { from: per.prev.from, to: per.prev.to };
+      const velToks = (charts[id]?.data.datasets || []).map(ds => ds.label);
+      const currVals = velToks.map(sym => bucketVelocity(sym, bCurr, gbVel)).filter(v => v != null);
+      const prevVals = velToks.map(sym => bucketVelocity(sym, bPrev, gbVel)).filter(v => v != null);
+      currVal = currVals.length ? currVals.reduce((a, b) => a + b, 0) / currVals.length : null;
+      prevVal = prevVals.length ? prevVals.reduce((a, b) => a + b, 0) / prevVals.length : null;
     } else if (id === 'chart-peg') {
       const vals = [];
       for (let i = per.curr.from; i <= per.curr.to; i++) {
@@ -2474,6 +2515,23 @@ if (document.readyState === "loading") {
     return { sumB, avgB, lastB };
   }
 
+  /* Period velocity: Σ volume in window ÷ supply at period end (×365 only for 1D) */
+  function bucketVelocity(sym, b, groupBy) {
+    if (!REAL_VOL?.[sym] || !_mcap?.[sym]) return null;
+    let sumV = 0, sumM = 0, n = 0;
+    for (let k = b.from; k <= b.to; k++) {
+      const v = REAL_VOL[sym][k] || 0;
+      const m = _mcap[sym][k] || 0;
+      if (v > 0 && m > 0) { sumV += v; sumM += m; n++; }
+    }
+    if (sumV <= 0 || n === 0) return null;
+    let supply = _mcap[sym][b.to] || 0;
+    if (supply <= 0) supply = sumM / n;
+    let vel = sumV / supply;
+    if (groupBy === 1) vel *= 365;
+    return Math.round(vel * 100) / 100;
+  }
+
   /* Per-chart update functions (called whenever state changes) */
   const UPDATERS = {
     'chart-peg': (ch, buckets, labels) => {
@@ -2508,17 +2566,10 @@ if (document.readyState === "loading") {
       });
     },
     'chart-velocity': (ch, buckets, labels) => {
+      const gb = states['chart-velocity']?.groupBy ?? 30;
       ch.data.labels = labels;
       ch.data.datasets.forEach(ds => {
-        const raw = REAL_VEL[ds.label];
-        if (!raw) { ds.data = Array(buckets.length).fill(null); return; }
-        ds.data = buckets.map(b => {
-          let s = 0, n = 0;
-          for (let k = b.from; k <= b.to; k++) {
-            if (raw[k] != null) { s += raw[k]; n++; }
-          }
-          return n > 0 ? Math.round(s / n * 100) / 100 : null;
-        });
+        ds.data = buckets.map(b => bucketVelocity(ds.label, b, gb));
       });
     },
     'chart-dex': (ch, buckets, labels) => {
@@ -2634,8 +2685,8 @@ if (document.readyState === "loading") {
         <div class="dual-slider">
           <div class="dual-slider-bg"></div>
           <div class="dual-slider-fill"></div>
-          <input type="range" min="0" max="729" value="0" data-role="rangeS">
-          <input type="range" min="0" max="729" value="729" data-role="rangeE">
+          <input type="range" min="0" max="720" value="0" data-role="rangeS">
+          <input type="range" min="0" max="720" value="720" data-role="rangeE">
         </div>
         <span class="chart-range-lbl r" data-role="end">—</span>
       </div>`;
@@ -2694,54 +2745,47 @@ if (document.readyState === "loading") {
      MODAL — per-project historical market cap (730 days)
   ══════════════════════════════════════════════════════ */
   /* ── Real supply data from Dune Analytics (supply-data.js)
-     EPOCH = May 12 2024, TOTAL = 730
-     Days 0-364  → pre-data (zero)
-     Days 365-729 → REAL_SUPPLY[sym][0..364] (May 12 2025 → May 11 2026) ── */
-  const SUPPLY_OFFSET = 365;
+     EPOCH = May 22 2024, TOTAL = 721
+     index[0] = May 22 2024, index[720] = May 12 2026 ── */
+  const SUPPLY_OFFSET = 0;
   const _mcap = {};
   if (typeof REAL_SUPPLY !== 'undefined') {
     Object.entries(REAL_SUPPLY).forEach(([sym, arr]) => {
       _mcap[sym] = Array.from({length: TOTAL}, (_, i) => {
-        if (i < SUPPLY_OFFSET) return 0;
-        const v = arr[i - SUPPLY_OFFSET];
+        const v = arr[i];
         return (v === null || v === undefined) ? 0 : v;
       });
     });
   }
   window.MCAP_DATA = _mcap;
 
-  /* ── Real velocity: annualised transfer volume ÷ circulating supply ── */
+  /* ── Velocity chart tokens (period formula applied in bucketVelocity) ── */
   if (hasVol && Object.keys(_mcap).length) {
-    VOL_ALL_SYMS.forEach(sym => {
-      if (!_mcap[sym]) return;
-      const arr = Array.from({length: TOTAL}, (_, i) => {
-        const v = REAL_VOL[sym]?.[i] || 0;
-        const m = _mcap[sym][i]  || 0;
-        if (v <= 0 || m <= 0) return null;
-        return Math.round((v / m) * 365 * 100) / 100;
-      });
-      if (arr.filter(x => x != null).length >= 10) REAL_VEL[sym] = arr;
+    const velToks = VOL_ALL_SYMS.filter(sym => {
+      if (!_mcap[sym] || !REAL_VOL[sym]) return false;
+      let n = 0;
+      for (let i = 0; i < TOTAL; i++) {
+        if ((REAL_VOL[sym][i] || 0) > 0 && (_mcap[sym][i] || 0) > 0) n++;
+      }
+      return n >= 10;
     });
-    // Build token list sorted by data completeness
-    const velToks = Object.keys(REAL_VEL)
-      .sort((a, b) => REAL_VEL[b].filter(x=>x!=null).length - REAL_VEL[a].filter(x=>x!=null).length);
-    // Inject datasets into already-created chart
     if (charts['chart-velocity']) {
-      charts['chart-velocity'].data.datasets = [
-        ...velToks.map(t => ({
-          label: t, data: [],
-          borderColor:     (VOL_COLOR_MAP[t] || C.gr),
-          backgroundColor: 'transparent',
-          borderWidth: 1.5, pointRadius: 0, tension: 0.3,
-        })),
-      ];
+      charts['chart-velocity'].data.datasets = velToks.map(t => ({
+        label: t, data: [],
+        borderColor:     (VOL_COLOR_MAP[t] || C.gr),
+        backgroundColor: 'transparent',
+        borderWidth: 1.5, pointRadius: 0, tension: 0.3,
+      }));
     }
-    // Populate velocity KPI cards
+    const velSt = states['chart-velocity'];
+    if (velSt) refreshChart('chart-velocity');
+
+    // Populate velocity KPI cards (last 30 days, same formula as 1M granularity)
     const vel30 = {};
+    const b30 = { from: TOTAL - 30, to: TOTAL - 1 };
     velToks.forEach(s => {
-      const vals = [];
-      for (let i = TOTAL - 30; i < TOTAL; i++) { if (REAL_VEL[s]?.[i] != null) vals.push(REAL_VEL[s][i]); }
-      if (vals.length) vel30[s] = vals.reduce((a,b)=>a+b,0) / vals.length;
+      const v = bucketVelocity(s, b30, 30);
+      if (v != null) vel30[s] = v;
     });
     const vel30Toks = Object.keys(vel30).sort((a,b)=>vel30[b]-vel30[a]);
     if (vel30Toks.length) {
@@ -2868,9 +2912,14 @@ if (document.readyState === "loading") {
       }
     }
 
-    /* Projects tracked */
+    /* Projects tracked (registry token count) */
     const projEl = document.getElementById('supKpiProjects');
-    if (projEl) projEl.textContent = Object.keys(_mcap).filter(s => _mcap[s].some(v => v > 0)).length;
+    if (projEl) {
+      const registryTokenCount = new Set(
+        gridEntries.flatMap(({ info }) => info.symbols)
+      ).size;
+      projEl.textContent = String(registryTokenCount);
+    }
   })();
 
   function supplyTooltipCallbacks() {
@@ -3333,6 +3382,80 @@ if (document.readyState === "loading") {
     link.click();
   }
 
+  function _csvCell(v) {
+    if (v === null || v === undefined) return '';
+    if (typeof v === 'number') return Number.isFinite(v) ? String(v) : '';
+    if (typeof v === 'object') {
+      if (Array.isArray(v)) return `"${v.map(x => String(x ?? '')).join('|').replace(/"/g, '""')}"`;
+      if ('x' in v || 'y' in v) return `"${`x:${v.x ?? ''},y:${v.y ?? ''}`.replace(/"/g, '""')}"`;
+      return `"${JSON.stringify(v).replace(/"/g, '""')}"`;
+    }
+    return `"${String(v).replace(/"/g, '""')}"`;
+  }
+
+  /* Row indices safe for CSV export (drops incomplete calendar quarter when groupBy = 1Q) */
+  function csvExportRowIndices(id, labelCount) {
+    const st = states[id];
+    if (!st || st.groupBy !== 90) return [...Array(labelCount).keys()];
+
+    const todayIdx = Math.min(Math.round((new Date() - EPOCH) / 86400000), TOTAL - 1);
+    const buckets = buildBucketsFor(st);
+    const n = Math.min(labelCount, buckets.length);
+    const kept = [];
+    for (let i = 0; i < n; i++) {
+      if (buckets[i].to < todayIdx) kept.push(i);
+    }
+    return kept.length ? kept : [...Array(labelCount).keys()];
+  }
+
+  /* 1Q CSV: column order highest → lowest (left → right), ranked on latest complete quarter */
+  function csvDatasetOrder(id, datasets, rowIdx) {
+    const st = states[id];
+    if (!st || st.groupBy !== 90 || !rowIdx.length)
+      return datasets.map((_, di) => di);
+
+    const rankRow = rowIdx[rowIdx.length - 1];
+    return datasets
+      .map((ds, di) => ({
+        di,
+        val: Array.isArray(ds.data) ? (Number(ds.data[rankRow]) || 0) : 0,
+      }))
+      .sort((a, b) => b.val - a.val)
+      .map(x => x.di);
+  }
+
+  function downloadChartAsCSV(id) {
+    const ch = charts[id];
+    if (!ch) return;
+
+    const labels = Array.isArray(ch.data?.labels) ? ch.data.labels : [];
+    const datasets = Array.isArray(ch.data?.datasets) ? ch.data.datasets : [];
+    const rowIdx = csvExportRowIndices(id, labels.length);
+    if (!rowIdx.length) return;
+
+    const colOrder = csvDatasetOrder(id, datasets, rowIdx);
+    const header = ['Label', ...colOrder.map(di => datasets[di].label || `Series ${di + 1}`)];
+    const lines = [header.map(_csvCell).join(',')];
+
+    rowIdx.forEach(i => {
+      const row = [labels[i] ?? `Row ${i + 1}`];
+      colOrder.forEach(di => {
+        const ds = datasets[di];
+        row.push(Array.isArray(ds.data) ? ds.data[i] : '');
+      });
+      lines.push(row.map(_csvCell).join(','));
+    });
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const section = ch.canvas.closest('.data-section');
+    const title = (section?.querySelector('.ds-title')?.textContent || id).trim().toLowerCase().replace(/\s+/g, '-');
+    link.download = `${title}-${id}-${new Date().toISOString().slice(0,10)}.csv`;
+    link.href = URL.createObjectURL(blob);
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }
+
   /* ── Inject download button + card footer into every chart card ── */
   const _xSvg = `<svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.813-8.126-10.687h7.116l4.26 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`;
   const _footerDate = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
@@ -3343,7 +3466,7 @@ if (document.readyState === "loading") {
     const card = canvas.closest('.ds-chart-card');
     if (!card) return;
 
-    // Download button in label
+    // Download buttons in label (CSV + PNG)
     const lblEl = card.querySelector('.ds-chart-lbl');
     if (lblEl && !lblEl.querySelector('.chart-dl-btn')) {
       if (!lblEl.querySelector('.ds-chart-lbl-text')) {
@@ -3353,6 +3476,13 @@ if (document.readyState === "loading") {
         lblEl.textContent = '';
         lblEl.appendChild(wrap);
       }
+      const csvBtn = document.createElement('button');
+      csvBtn.className = 'chart-dl-btn chart-csv-btn';
+      csvBtn.title = 'Download as CSV';
+      csvBtn.textContent = 'CSV';
+      csvBtn.onclick = () => downloadChartAsCSV(id);
+      lblEl.appendChild(csvBtn);
+
       const btn = document.createElement('button');
       btn.className = 'chart-dl-btn';
       btn.title = 'Download as PNG';
