@@ -654,7 +654,7 @@
   }
   .ds-charts.c1 { grid-template-columns: 1fr; }
   .ds-charts.c2 { grid-template-columns: 2fr 1fr; }
-  .ds-chart-card { background: var(--white); padding: 22px 24px; }
+  .ds-chart-card { position: relative; background: var(--white); padding: 22px 24px; }
   .ds-chart-lbl {
     font-family: 'Inter Tight', sans-serif; font-weight: 600;
     font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
@@ -898,6 +898,55 @@
   }
   .ds-chart-lbl { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .ds-chart-lbl-text { flex: 1; }
+
+  .chart-hover-tooltip {
+    position: absolute;
+    z-index: 20;
+    max-width: min(320px, calc(100% - 32px));
+    max-height: 220px;
+    overflow-y: auto;
+    pointer-events: auto;
+    opacity: 0;
+    visibility: hidden;
+    background: #fff;
+    border: 1px solid var(--line);
+    box-shadow: 0 12px 32px rgba(6, 6, 31, 0.08);
+    padding: 10px;
+    color: var(--ink-dim);
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 11px;
+    line-height: 1.35;
+    scrollbar-width: thin;
+    scrollbar-color: var(--blue-soft) transparent;
+  }
+  .chart-hover-tooltip::-webkit-scrollbar { width: 4px; }
+  .chart-hover-tooltip::-webkit-scrollbar-track { background: transparent; }
+  .chart-hover-tooltip::-webkit-scrollbar-thumb { background: var(--blue-soft); border-radius: 999px; }
+  .chart-hover-title {
+    color: var(--ink);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .chart-hover-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+    margin-top: 4px;
+  }
+  .chart-hover-swatch {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+  }
+  .chart-hover-footer {
+    margin-top: 8px;
+    padding-top: 7px;
+    border-top: 1px solid var(--line-soft);
+    color: var(--ink);
+    font-weight: 700;
+  }
 
   /* TALL CHART (for horizontal bar with many items) */
   .ds-chart-body.xxl { height: 560px; }
@@ -1399,7 +1448,7 @@
       </div>
       <div class="field">
         <div class="modal-chart-hd">
-          <div class="field-label" style="margin-bottom:0">HISTORICAL MARKET CAP</div>
+          <div class="field-label" style="margin-bottom:0">HISTORICAL SUPPLY</div>
           <div class="modal-grp-btns" id="mGrpBtns">
             <button class="modal-grp-btn active" data-g="30">1M</button>
             <button class="modal-grp-btn" data-g="90">1Q</button>
@@ -1818,6 +1867,21 @@ if (document.readyState === "loading") {
          :              Math.round(v).toLocaleString();
   }
 
+  function stackedLegendLabels(fmtVal, opts = {}) {
+    const mode = opts.mode || 'sum';
+    return function(chart) {
+      const labels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+      return labels.map(item => {
+        const ds = chart.data.datasets[item.datasetIndex];
+        const vals = Array.isArray(ds?.data) ? ds.data.filter(v => Number.isFinite(Number(v))) : [];
+        const total = mode === 'latest'
+          ? [...vals].reverse().find(v => Number(v) > 0) || 0
+          : vals.reduce((s, v) => s + Number(v || 0), 0);
+        return { ...item, text: `${item.text} · ${fmtVal(total)}` };
+      });
+    };
+  }
+
   function makeTT(fmtVal, opts = {}) {
     const MAX        = opts.max     ?? 8;
     const useX       = opts.useX    ?? false;
@@ -1863,6 +1927,54 @@ if (document.readyState === "loading") {
         }
       }
     };
+  }
+
+  function scrollHoverTooltip(context) {
+    const { chart, tooltip } = context;
+    const card = chart.canvas.closest('.ds-chart-card');
+    if (!card) return;
+
+    let el = card.querySelector('.chart-hover-tooltip');
+    if (!el) {
+      el = document.createElement('div');
+      el.className = 'chart-hover-tooltip';
+      el.addEventListener('mouseleave', () => {
+        el.style.opacity = '0';
+        el.style.visibility = 'hidden';
+      });
+      card.appendChild(el);
+    }
+
+    if (tooltip.opacity === 0) {
+      if (el.matches(':hover')) return;
+      el.style.opacity = '0';
+      el.style.visibility = 'hidden';
+      return;
+    }
+
+    const title = (tooltip.title || []).join(' ');
+    const rows = tooltip.dataPoints.map((pt, i) => {
+      const line = tooltip.body?.[i]?.lines?.[0];
+      if (!line) return '';
+      const color = tooltip.labelColors?.[i]?.backgroundColor || tooltip.labelColors?.[i]?.borderColor || '#d8dde5';
+      return `<div class="chart-hover-row"><span class="chart-hover-swatch" style="background:${color}"></span><span>${line}</span></div>`;
+    }).join('');
+    const footer = (tooltip.footer || []).filter(Boolean)
+      .map(line => `<div>${line}</div>`).join('');
+
+    el.innerHTML = `${title ? `<div class="chart-hover-title">${title}</div>` : ''}${rows}${footer ? `<div class="chart-hover-footer">${footer}</div>` : ''}`;
+
+    const canvasRect = chart.canvas.getBoundingClientRect();
+    const cardRect = card.getBoundingClientRect();
+    const x = canvasRect.left - cardRect.left + tooltip.caretX + 12;
+    const y = canvasRect.top - cardRect.top + tooltip.caretY + 12;
+    const maxX = card.clientWidth - el.offsetWidth - 12;
+    const maxY = card.clientHeight - el.offsetHeight - 12;
+
+    el.style.opacity = '1';
+    el.style.visibility = 'visible';
+    el.style.left = `${Math.max(12, Math.min(x, maxX))}px`;
+    el.style.top = `${Math.max(12, Math.min(y, maxY))}px`;
   }
 
   /* ── Constants ── */
@@ -2066,8 +2178,8 @@ if (document.readyState === "loading") {
     ]},
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{
-        legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10 } },
-        tooltip:{ mode:'index', intersect:false, ...makeTT(_fmtMil, { cluster:false }) }
+        legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10, generateLabels: stackedLegendLabels(_fmtMil) } },
+        tooltip:{ enabled:false, external: scrollHoverTooltip, mode:'index', intersect:false, ...makeTT(_fmtMil, { cluster:false }) }
       },
       scales:{
         x:{ stacked:true, grid:{display:false}, ticks:{maxTicksLimit:8, font:{family:"'Inter Tight',sans-serif",size:9}} },
@@ -2088,8 +2200,8 @@ if (document.readyState === "loading") {
     ]},
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{
-        legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10 } },
-        tooltip:{ mode:'index', intersect:false, ...makeTT(_fmtCnt, { cluster:false }) }
+        legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10, generateLabels: stackedLegendLabels(_fmtCnt) } },
+        tooltip:{ enabled:false, external: scrollHoverTooltip, mode:'index', intersect:false, ...makeTT(_fmtCnt, { cluster:false }) }
       },
       scales:{
         x:{ stacked:true, grid:{display:false}, ticks:{maxTicksLimit:8, font:{family:"'Inter Tight',sans-serif",size:9}} },
@@ -2123,8 +2235,8 @@ if (document.readyState === "loading") {
     ]},
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{
-        legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10 } },
-        tooltip:{ mode:'index', intersect:false, ...makeTT(_fmtMil, { cluster:false }) }
+        legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10, generateLabels: stackedLegendLabels(_fmtMil) } },
+        tooltip:{ enabled:false, external: scrollHoverTooltip, mode:'index', intersect:false, ...makeTT(_fmtMil, { cluster:false }) }
       },
       scales:{
         x:{ stacked:true, grid:{display:false}, ticks:{maxTicksLimit:8, font:{family:"'Inter Tight',sans-serif",size:9}} },
@@ -2145,8 +2257,8 @@ if (document.readyState === "loading") {
     ]},
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{
-        legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10 } },
-        tooltip:{ mode:'index', intersect:false, ...makeTT(_fmtCnt, { cluster:false }) }
+        legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10, generateLabels: stackedLegendLabels(_fmtCnt) } },
+        tooltip:{ enabled:false, external: scrollHoverTooltip, mode:'index', intersect:false, ...makeTT(_fmtCnt, { cluster:false }) }
       },
       scales:{
         x:{ stacked:true, grid:{display:false}, ticks:{maxTicksLimit:8, font:{family:"'Inter Tight',sans-serif",size:9}} },
@@ -2193,8 +2305,8 @@ if (document.readyState === "loading") {
       indexAxis: 'y',
       responsive:true, maintainAspectRatio:false,
       plugins:{
-        legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10 } },
-        tooltip:{ mode:'index', intersect:false,
+        legend:{ position:'top', labels:{ font:{family:"'Inter Tight',sans-serif",size:9}, boxWidth:12, padding:10, generateLabels: stackedLegendLabels(_fmtCnt) } },
+        tooltip:{ enabled:false, external: scrollHoverTooltip, mode:'index', intersect:false,
           ...makeTT(_fmtCnt, { useX:true, max:4, cluster:false }) }
       },
       scales:{
@@ -2742,7 +2854,7 @@ if (document.readyState === "loading") {
   }
 
   /* ══════════════════════════════════════════════════════
-     MODAL — per-project historical market cap (730 days)
+     MODAL — per-project historical supply
   ══════════════════════════════════════════════════════ */
   /* ── Real supply data from Dune Analytics (supply-data.js)
      EPOCH = May 22 2024, TOTAL = 721
@@ -2942,9 +3054,9 @@ if (document.readyState === "loading") {
       plugins: {
         legend: {
           position: 'bottom',
-          labels: { font: { family:"'Inter Tight',sans-serif", size: 9 }, boxWidth: 10, padding: 14, color: '#666' },
+          labels: { font: { family:"'Inter Tight',sans-serif", size: 9 }, boxWidth: 10, padding: 14, color: '#666', generateLabels: stackedLegendLabels(_fmtMil, { mode: 'latest' }) },
         },
-        tooltip: { mode: 'index', ...makeTT(_fmtMil, { max:6, cluster:false }) },
+        tooltip: { enabled: false, external: scrollHoverTooltip, mode: 'index', ...makeTT(_fmtMil, { max:6, cluster:false }) },
       },
       scales: {
         x: {
@@ -3017,9 +3129,9 @@ if (document.readyState === "loading") {
       plugins: {
         legend: {
           position: 'bottom',
-          labels: { font: { family:"'Inter Tight',sans-serif", size: 9 }, boxWidth: 10, padding: 12, color: '#555' },
+          labels: { font: { family:"'Inter Tight',sans-serif", size: 9 }, boxWidth: 10, padding: 12, color: '#555', generateLabels: stackedLegendLabels(_fmtMil, { mode: 'latest' }) },
         },
-        tooltip: { mode: 'index', ...makeTT(_fmtMil, { max:12, cluster:false }) },
+        tooltip: { enabled: false, external: scrollHoverTooltip, mode: 'index', ...makeTT(_fmtMil, { max:12, cluster:false }) },
       },
       scales: {
         x: {
